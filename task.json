@@ -2,8 +2,9 @@
 "base": "Fe",
 "init_t": 1350.0,
 "D_0": 83.0,
-"e": 0.35,
-"v": 2.0,
+"e_deform": 0.35,
+"v_deform": 2.0,
+"lattice_type": "FCC",
 
 "chemComposition": {
     "C": 0.15,
@@ -18,16 +19,12 @@
     "N": 0.006
 },
 
-"lattice_type": "FCC",
-
-"max_step": 2500,
-
 "r_init": 10.0,
 
 "d_tau": 0.01,
 "max_x": 0.999,
 "max_step": 100000,
-"max_tau": 1000,
+"max_tau": 1,
 "tolerance": 0.00001
 
 }

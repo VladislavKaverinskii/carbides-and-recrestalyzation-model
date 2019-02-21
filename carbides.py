@@ -19,14 +19,14 @@ class Nucleation:
         self.composition = composition
         self.current_t = init_t
 
-        self.disl_handler = rec_press.Dislocations(parameters=parameters, composition=composition)
+        self.disl_handler = rec_press.Dislocations(parameters=self.parameters, composition=composition)
 
         self.chem = rec_press.Chemical(composition, base=base, lattice_type=lattice_type)
 
         self.thermo_solver = None
         if base == "Fe":
             self.thermo_solver = thermodytamic.CarbonitrideThermodynamicsInSteel(chem_composition=composition,
-                                                                                 td_params = parameters["td_params"],
+                                                                                 td_params = self.parameters["td_params"],
                                                                                  t = init_t)
 
         self.equilibrium_data = self.calculate_carbonitrides_equilibrium()
@@ -323,17 +323,17 @@ class Growth:
 
 
     def element_dens(self, element="Fe", t=1000.0):
-        if "elements_dens" in parameters:
-            if element in parameters["elements_dens"]:
+        if "elements_dens" in self.parameters:
+            if element in self.parameters["elements_dens"]:
                 a = 0
                 b = 0
                 c = 0
-                if "a" in parameters["elements_dens"][element]:
-                    a = parameters["elements_dens"][element]["a"]
-                if "b" in parameters["elements_dens"][element]:
-                    b = parameters["elements_dens"][element]["b"]
-                if "c" in parameters["elements_dens"][element]:
-                    c = parameters["elements_dens"][element]["c"]
+                if "a" in self.parameters["elements_dens"][element]:
+                    a = self.parameters["elements_dens"][element]["a"]
+                if "b" in self.parameters["elements_dens"][element]:
+                    b = self.parameters["elements_dens"][element]["b"]
+                if "c" in self.parameters["elements_dens"][element]:
+                    c = self.parameters["elements_dens"][element]["c"]
                 return (a * (t**2)) + (b * t) + c
         return 0.0
 
@@ -614,7 +614,7 @@ class Solver:
         inner_m_p = 0
 
         c = self.growth_handler.chem.chemComposition["C"]
-        print(c)
+        #print(c)
 
         d_current = self.rec_solver.D_0
 
@@ -858,7 +858,7 @@ class Solver:
             #print(x_t)
             #print(growth_rates["Ti_C_N"])
             #print(n_current["Ti_C_N"])
-            print(r_current["Ti_C_N"])
+            #print(r_current["Ti_C_N"])
             #print(current_concentrations["Ti"])
             #print(self.growth_handler.r_c_eff(t=self.growth_handler.current_t, compound="Ti_C_N", current_solution=current_concentrations))
             #print(equilibrium_concentrations)
@@ -891,7 +891,7 @@ class Solver:
 
             current_concentrations = new_concentrations
 
-            new_disl_handler = rec_press.Dislocations(parameters=parameters, composition=current_concentrations)
+            new_disl_handler = rec_press.Dislocations(parameters=self.growth_handler.parameters, composition=current_concentrations)
             self.growth_handler.disl_handler = new_disl_handler
             self.growth_handler.nucl_handler.disl_handler = new_disl_handler
             self.rec_solver.dislocations_handler = new_disl_handler
@@ -899,6 +899,7 @@ class Solver:
             c = current_concentrations["C"]
 
             #print(self.f_coars(r=r_current["Ti_C_N"], r_c_eff=self.growth_handler.r_c_eff(t=self.growth_handler.current_t, compound="Ti_C_N", current_solution=current_concentrations)))
+            print(current_tau)
 
             current_tau += d_tau
             current_step += 1
@@ -960,12 +961,12 @@ print(growth_handler.r_0(t=1350.0))
 print(growth_handler.diff_coef(t=1350.0))
 print(growth_handler.disl_diff_coef(t=1350.0))
 print(growth_handler.diff_coef_eff(t=1350.0, disl_dens=1892308866164430.5, current_solution=growth_handler.chem.chemComposition))
-'''
+
 solve_handler = Solver(parameters, chemComposition, init_t=1350.0)
 
 print(solve_handler.f_coars(r=10.0, r_c_eff=1.0))
 print(solve_handler.solve_isothermal(max_step=2500))
-
+'''
 
 #self.chem.chemComposition
 
