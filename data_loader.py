@@ -45,6 +45,22 @@ class Task:
         self.max_tau = 0
         self.tolerance = 0.00001
 
+    def serialize(self):
+        return {
+            "base": self.base,
+            "init_t": self.init_t,
+            "D_0": self.D_0,
+            "e_deform": self.e_deform,
+            "v_deform": self.v_deform,
+            "chemComposition": self.chemComposition,
+            "lattice_type": self.lattice_type,
+            "max_step": self.max_step,
+            "r_init": self.r_init,
+            "d_tau": self.d_tau,
+            "max_x": self.max_x,
+            "max_tau": self.max_tau,
+            "tolerance": self.tolerance
+        }
 
 def load_parameters(path="parameters.json"):
     raw_json = json.loads(open(path).read())
@@ -71,8 +87,7 @@ def load_parameters(path="parameters.json"):
         "compounds_dens": raw_json["compounds_dens"],
         "td_params": td_params ,
         "elements_dens": raw_json["elements_dens"],
-        "surface_energy": raw_json["surface_energy"],
-        "elements_dens": raw_json["elements_dens"]
+        "surface_energy": raw_json["surface_energy"]
     }
 
     return parameters
@@ -102,6 +117,8 @@ def load_task(path="task.json"):
     return None
 
 
+def load_terms_description(path="terms_description.json"):
+    return json.loads(open(path).read())
 
 
 

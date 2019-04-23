@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import flow_stress
 import rec_press
 import thermodytamic
+import copy
 
 R = 8.3144598
 N_A = 6.0221409e+23
@@ -447,13 +448,6 @@ class Growth:
         a = self.alpha_p(compound=compound, composition=current_solution, t=t)
 
         part_1 = d / r_current
-        '''
-        print(compound)
-        print(r_0)
-        print(r_current)
-        print(r_0 / r_current)
-        print()
-        '''
 
         part_2 = (x_elem - (x_eq * math.exp(r_0 / r_current))) / ((a * x_p) - (x_eq * math.exp(r_0 / r_current)))
 
@@ -461,17 +455,7 @@ class Growth:
 
         if part_2 < 0:
             part_2 = (x_elem - (x_eq * math.exp(-r_0 / r_current))) / ((a * x_p) - (x_eq * math.exp(-r_0 / r_current)))
-        '''
-        print()
-        print(r_c)
-        print(part_1)
-        print(part_2)
-        print(part_3)
-        print(part_1 * part_2)
-        print((part_1 * part_2) + part_3)
-        #print((x_elem - (x_eq * math.exp(-r_0 / r_current))) / ((a * x_p) - (x_eq * math.exp(-r_0 / r_current))))
-        print()
-        '''
+
         return (part_1 * part_2) + part_3
 
     def nucleation_rate_ostvald(self, compound="Nb_C_N", current_solution={}, t=1000.0, disl_dens=1.0, n_current=0.0,
@@ -825,34 +809,36 @@ class Solver:
                         else:
                             r_current[i] += d_tau * growth_rates[i]
 
+            print(r_current["Ti_C_N"])
+
             if "x_t" not in out_result:
                 out_result["x_t"] = {current_tau: x_t}
             else:
                 out_result["x_t"][current_tau] = x_t
             if "growth_rates" not in out_result:
-                out_result["growth_rates"] = {current_tau: growth_rates}
+                out_result["growth_rates"] = {current_tau: copy.deepcopy(growth_rates)}
             else:
-                out_result["growth_rates"][current_tau] = growth_rates
+                out_result["growth_rates"][current_tau] = copy.deepcopy(growth_rates)
             if "n_current" not in out_result:
-                out_result["n_current"] = {current_tau: n_current}
+                out_result["n_current"] = {current_tau: copy.deepcopy(n_current)}
             else:
-                out_result["n_current"][current_tau] = n_current
+                out_result["n_current"][current_tau] = copy.deepcopy(n_current)
             if "r_current" not in out_result:
-                out_result["r_current"] = {current_tau: r_current}
+                out_result["r_current"] = {current_tau: copy.deepcopy(r_current)}
             else:
-                out_result["r_current"][current_tau] = r_current
+                out_result["r_current"][current_tau] = copy.deepcopy(r_current)
             if "current_concentrations" not in out_result:
-                out_result["current_concentrations"] = {current_tau: current_concentrations}
+                out_result["current_concentrations"] = {current_tau: copy.deepcopy(current_concentrations)}
             else:
-                out_result["current_concentrations"][current_tau] = current_concentrations
+                out_result["current_concentrations"][current_tau] = copy.deepcopy(current_concentrations)
             if "disl_dens" not in out_result:
-                out_result["disl_dens"] = {current_tau: disl_dens}
+                out_result["disl_dens"] = {current_tau: copy.deepcopy(disl_dens)}
             else:
-                out_result["disl_dens"][current_tau] = disl_dens
+                out_result["disl_dens"][current_tau] = copy.deepcopy(disl_dens)
             if "d_current" not in out_result:
-                out_result["d_current"] = {current_tau: d_current}
+                out_result["d_current"] = {current_tau: copy.deepcopy(d_current)}
             else:
-                out_result["d_current"][current_tau] = d_current
+                out_result["d_current"][current_tau] = copy.deepcopy(d_current)
 
 
             #print(x_t)

@@ -67,7 +67,7 @@ class MainSolver:
         if self.thermodynamic_result is None:
             self.thermodynamic_result = self.calculate_carbonitrides_equilibrium()
         f = open(out_file, 'w')
-        f.write(json.dumps(self.thermodynamic_result))
+        f.write(json.dumps({"initial": self.task.serialize(), "result": self.thermodynamic_result}))
         f.close()
 
 
@@ -75,7 +75,7 @@ class MainSolver:
         if self.carbides_result is None:
             self.carbides_result = self.carbonitride_precipitation_simulation()
         f = open(out_file, 'w')
-        f.write(json.dumps(self.carbides_result))
+        f.write(json.dumps({"initial": self.task.serialize(), "result": self.carbides_result}))
         f.close()
 
 
@@ -83,7 +83,7 @@ class MainSolver:
         if self.recrystalization_result is None:
             self.recrystalization_result = self.carbonitride_precipitation_simulation()
         f = open(out_file, 'w')
-        f.write(json.dumps(self.recrystalization_result))
+        f.write(json.dumps({"initial": self.task.serialize(), "result": self.recrystalization_result}))
         f.close()
 
 

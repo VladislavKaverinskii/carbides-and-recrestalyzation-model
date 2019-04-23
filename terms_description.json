@@ -1,0 +1,72 @@
+{
+    "x_t": {
+        "name": "Recrystallization part",
+        "x": "Time, s",
+        "y": "Recrystallization part"
+    },
+    "growth_rates": {
+        "name": "Carbonitrides growth rate",
+        "x": "Time, s",
+        "y": "Growth rate, m/s"
+    },
+    "n_current": {
+        "name": "Number of carbonitride particles",
+        "x": "Time, s",
+        "y": "Number of particles"
+    },
+    "r_current": {
+        "name": "Sizes of carbonitride particles",
+        "x": "Time, s",
+        "y": "Size, m"
+    },
+    "current_concentrations": {
+        "name": "Eement in soution",
+        "x": "Time, s",
+        "y": "Concentration, %"
+    },
+    "disl_dens": {
+        "name": "Dislocation density",
+        "x": "Time, s",
+        "y": "Dislocation density, m-2"
+    },
+    "d_current": {
+        "name": "Grain size",
+        "x": "Time, s",
+        "y": "Grain size, microns"
+    },
+    "grain_d": {
+        "name": "Grain size",
+        "x": "Time, s",
+        "y": "Grain size, microns"
+    },
+    "elements_consumption": {
+        "name": "Consumption of elements",
+        "x": "Compounds names",
+        "y": "Percentage consumed, wt. %"
+    },
+    "percents_of_compounds": {
+        "name": "Percents of compound among the others",
+        "x": "Compounds names",
+        "y": "Percent of consumed, wt. %"
+    },
+    "elements_in_solution": {
+        "name": "Amount of elements left in the solution",
+        "x": "Elements names",
+        "y": "Percent in solution, wt. %"
+    },
+	"temperature": {
+	    "name": "Temperature",
+		"x": "",
+        "y": "Temperature, C"
+	},
+	"carbides_mass": {
+	    "name": "Total mass of the carbides",
+		"x": "",
+        "y": "Carbides mass, kg"
+	},
+	"nitrides_mass": {
+	    "name": "Total mass of the nitrides",
+		"x": "",
+        "y": "Nitrides mass, kg"	
+	}
+}

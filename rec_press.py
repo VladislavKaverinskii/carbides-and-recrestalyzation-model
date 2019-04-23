@@ -336,11 +336,20 @@ class RecrystalizationSolver:
         tau = 0
         n_step = 1
 
+
         x_t_out = {tau: x_t}
         c = self.dislocations_handler.composition["C"]
         #n_rex = self.dislocations_handler.n_rex(x_t=x_t, D_0=self.D_0, e=self.e, v=self.v, T=self.T, C=c)
 
         d_current = self.D_0
+
+        d_out = {tau: d_current}
+
+        dens = self.dislocations_handler.austenite_disl_dens_t(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T,
+                                                               C=c, tau=tau)
+
+        dens_out = {tau: dens}
+
 
         if self.is_set:
             while n_step < n_step_max and tau < max_tau and x_t < max_x:
@@ -377,16 +386,17 @@ class RecrystalizationSolver:
                 inner_m_p += m_rex_gb * p_rex * d_tau
 
                 dens = self.dislocations_handler.austenite_disl_dens_t(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T, C=c, tau=tau)
-                #print(dens)
 
                 tau += d_tau
                 n_step += 1
+
+                d_out[tau] = d_current
                 x_t_out[tau] = x_t
+                dens_out[tau] = dens
 
 
-        x_t_out[tau] = x_t
 
-        return x_t_out
+        return {"x_t": x_t_out, "grain_d": d_out, "disl_dens": dens_out}
 
     def x_t_calc(self, x_t, d_current, inner_m_p, c, tau, d_tau, p_z=0.0):
 
