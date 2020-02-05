@@ -489,6 +489,11 @@ class Growth:
         part_2 = x_elem / ((a * x_p) - x_eq)
         part_3 = (r_0 * d) / (r_current ** 2.0)
 
+        if element == "Ti":
+            print(r_0 * d, r_current ** 2.0)
+            print(r_0, d, r_current)
+            print(part_1, part_2, part_3)
+
         return part_1 * part_2 * part_3
 
 
@@ -804,12 +809,14 @@ class Solver:
                                                                 n_current=n_current[i], r_current=r_current[i],
                                                                 current_solution=current_concentrations)
 
+                        print(i, growth_rates[i])
+
                         if r_current[i] <= 1.0001e-10:
                             r_current[i] = d_tau * growth_rates[i]
                         else:
                             r_current[i] += d_tau * growth_rates[i]
 
-            print(r_current["Ti_C_N"])
+            #print(r_current["Ti_C_N"])
 
             if "x_t" not in out_result:
                 out_result["x_t"] = {current_tau: x_t}
@@ -885,7 +892,7 @@ class Solver:
             c = current_concentrations["C"]
 
             #print(self.f_coars(r=r_current["Ti_C_N"], r_c_eff=self.growth_handler.r_c_eff(t=self.growth_handler.current_t, compound="Ti_C_N", current_solution=current_concentrations)))
-            print(current_tau)
+            #print(current_tau)
 
             current_tau += d_tau
             current_step += 1

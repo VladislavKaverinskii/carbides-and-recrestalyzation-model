@@ -1,0 +1,2858 @@
+
+
+procedure TForm1.Button1Click(Sender: TObject);
+
+label
+sl1;
+
+begin
+
+i2:=0;
+i3:=0;
+j1:=1;
+j2:=0;
+j3:=0;
+
+epsilon:=0.000001;
+
+control1:=TStringList.Create;
+control1.add(' ');
+control1.add(' ');
+
+result:=TStringList.Create;
+result.add(' ');
+result.add(' ');
+
+result2:=TStringList.Create;
+result2.add(' ');
+result2.add(' ');
+
+{ исходные концентрации компонентов}
+mCn:=strtofloat(Edit1.text);
+mMnn:=strtofloat(Edit2.text);
+mSin:=strtofloat(Edit3.text);
+mAln:=strtofloat(Edit4.text);
+mCan:=strtofloat(Edit5.text);
+mOn:=strtofloat(Edit6.text);
+mSn:=strtofloat(Edit7.text);
+mNn:=strtofloat(Edit17.text);
+mCr:=strtofloat(Edit9.text);
+mNic:=strtofloat(Edit10.text);
+mMo:=strtofloat(Edit12.text);
+mTin:=strtofloat(Edit13.text);
+mNbn:=strtofloat(Edit14.text);
+mVn:=strtofloat(Edit15.text);
+mZrn:=strtofloat(Edit16.text);
+
+if (mCn=0) and (mNn=0) then
+begin
+showmessage('В приведенном составе нет ни углерода ни азота, '+
+'следовательно, не возможно образовние карбидов или нитридов.');
+goto sl1;
+end;
+
+if (mAln=0) and (mTin=0) and (mNbn=0) and (mVn=0) and (mZrN=0) then
+begin
+showmessage('Данная программа разработанна для расчёта образования '+
+' карбидов и нитридов Al, Nb, Ti, V и Zr.' +
+' В приведенном составе нет ни одного из вышеуказанных элементов.' +
+' Следовательно, проведение расчёта не представляется возможным.');
+goto sl1;
+end;
+
+
+{Переводим температуру в градусы Кельвина}
+T:=strtofloat(Edit8.text)+273;
+
+if (T<800) or (T>1850) then
+begin
+showmessage('Указанная температура лежит вне области достоверноверных '+
+' значений исходных данных' +
+' Укажите значение температуры в пределах 700...1500 градусов' );
+goto sl1;
+end;
+
+{атомные массы элементов}
+MrMn:=54.9381;
+MrSi:=28.086;
+MrAl:=26.9815;
+MrO:=15.9994;
+MrCa:=40.08;
+MrFe:=55.847;
+MrS:=32.064;
+MrN:=14.0067;
+MrCr:=51.996;
+MrNi:=58.71;
+MrCu:=63.54;
+MrMo:=95.94;
+MrTi:=47.90;
+MrNb:=92.906;
+MrV:=50.942;
+MrZr:=91.22;
+MrC:=12.0107;
+
+{константы равновесия}
+
+KTiN:=Power(10,((13807/T)-5.356));
+{ KNbN:=Power(10,((5839/T)-4.904)); }
+KNbN:=Power(10,((13703/T)-5.0566));
+KVN:=Power(10,((9574.371/T)-4.71283)); 
+KZrN:=Power(10,((15676.093/T)-5.5887));
+KAlN:=Power(10,((14173.019/T)-6.0591));
+KTiC:=Power(10,((8397.913/T)-(-0.00013*T)-4.0023));
+KNbC:=Power(10,((9219/T)-3.6565));
+KVC:=Power(10,((5474/T)-4.5724));
+KZrC:=Power(10,((8659/T)-5.1397));
+
+{параметры взаимодействия}
+
+eNC:=0.13;
+eNMn:=-0.091;
+eNSi:=0.047;
+eNO:=0.05;
+eNS:=0.007;
+eNAl:=-0.028;
+eNCr:=-0.047;
+eNNi:=0.01;
+eNCu:=0.009;
+eNMo:=-0.011;
+eNTi:=-0.53;
+eNNb:=-0.06;
+eNV:=-0.093;
+eNZr:=-0.63;
+
+rNNi:=0.00007;
+rNCr:=0.00032;
+rNCrNi:=-0.00008;
+
+eAlC:=0.091;
+eAlSi:=0.0056;
+eAlAl:=(63/T)+0.011;
+eAlO:=-(34740/T)+11.95;
+eAlCa:=-0.047;
+eAlS:=0.03;
+eAlN:=-0.58;
+
+rAlC:=-0.004;
+rAlSi:=-0.0006;
+rAlAl:=-0.001;
+
+eCC:=0.14;
+eCMn:=-0.012;
+eCSi:=0.078;
+eCO:=-0.34;
+eCCa:=-0.097;
+eCS:=0.046;
+eCAl:=0.043;
+eCN:=0.11;
+eCCr:=-0.024;
+eCNi:=0.012;
+eCCu:=0.016;
+eCMo:=-0.0083;
+eCTi:=-0.021;
+eCNb:=-0.06;
+eCV:=-0.077;
+
+rCC:=0.0074;
+rCSi:=0.0007;
+rCAl:=-0.0007;
+rCCa:=0.012;
+rCS:=0.0058;
+
+
+eTiO:=-1.8;
+eTiS:=-0.11;
+eTiN:=-1.8;
+eTiCr:=0.055;
+eTiTi:=0.013;
+
+rTiTi:=-0.0001;
+rTiCr:=-0.0001;
+rTiNi:=0.0005;
+rTiCrNi:=-0.0006;
+
+eNbC:=-0.49;
+eNbO:=-0.83;
+eNbS:=-0.047;
+eNbN:=-0.42;
+
+rNbS:=-0.0001;
+
+eVC:=-0.34;
+eVSi:=0.042;
+eVO:=-0.97;
+eVS:=-0.028;
+eVN:=-0.35;
+eVV:=0.015;
+
+rVSi:=-0.0006;
+rVV:=-0.0001;
+rVC:=0.0001;
+
+eZrSi:=0.042;
+eZrS:=-0.16;
+eZrN:=-4.10;
+
+rZrS:=-0.0002;
+
+
+{энергетические параметры элементов}
+
+cTi:=134;
+cN:=732;
+cAl:=125;
+cC:=29;
+cV:=184;
+cNb:=280;
+cZr:=226;
+
+{энергии обмена метами атомов}
+
+eeTiN:=(1/2)*(Power(((Power(cTi,0.5))-(Power(cN,0.5))),2));
+eeTiC:=(1/2)*(Power(((Power(cTi,0.5))-(Power(cC,0.5))),2));
+eeTiAl:=(1/2)*(Power(((Power(cTi,0.5))-(Power(cAl,0.5))),2));
+eeTiV:=(1/2)*(Power(((Power(cTi,0.5))-(Power(cV,0.5))),2));
+eeTiNb:=(1/2)*(Power(((Power(cTi,0.5))-(Power(cNb,0.5))),2));
+eeTiZr:=(1/2)*(Power(((Power(cTi,0.5))-(Power(cZr,0.5))),2));
+eeNbN:=(1/2)*(Power(((Power(cNb,0.5))-(Power(cN,0.5))),2));
+eeNbC:=(1/2)*(Power(((Power(cNb,0.5))-(Power(cC,0.5))),2));
+eeNbAl:=(1/2)*(Power(((Power(cNb,0.5))-(Power(cAl,0.5))),2));
+eeNbV:=(1/2)*(Power(((Power(cNb,0.5))-(Power(cV,0.5))),2));
+eeNbZr:=(1/2)*(Power(((Power(cNb,0.5))-(Power(cZr,0.5))),2));
+eeAlN:=(1/2)*(Power(((Power(cAl,0.5))-(Power(cN,0.5))),2));
+eeAlC:=(1/2)*(Power(((Power(cAl,0.5))-(Power(cC,0.5))),2));
+eeAlV:=(1/2)*(Power(((Power(cAl,0.5))-(Power(cV,0.5))),2));
+eeAlZr:=(1/2)*(Power(((Power(cAl,0.5))-(Power(cZr,0.5))),2));
+eeVN:=(1/2)*(Power(((Power(cV,0.5))-(Power(cN,0.5))),2));
+eeVC:=(1/2)*(Power(((Power(cV,0.5))-(Power(cC,0.5))),2));
+eeVZr:=(1/2)*(Power(((Power(cAl,0.5))-(Power(cZr,0.5))),2));
+eeZrN:=(1/2)*(Power(((Power(cZr,0.5))-(Power(cN,0.5))),2));
+eeZrC:=(1/2)*(Power(((Power(cZr,0.5))-(Power(cC,0.5))),2));
+eeCN:=(1/2)*(Power(((Power(cC,0.5))-(Power(cN,0.5))),2));
+
+
+{коэффициенты активности компонентов раствора}
+
+fN:= Power(10,( (1873/T) * ( ((mCn*eNC) + (mMnn*eNMn) + (mSin*eNSi) +
+(mOn*eNO) + (mSn*eNS) + (mAln*eNAl) + (mCr*eNCr) + (mNic*eNNi) +
+(mCu*eNCu) + (mMo*eNMo) + (mTin*eNTi) + (mNbn*eNNb) + (mVn*eNV) +
+(mZrn*eNZr)) + ( (mCr*mCr*rNCr) + (mNic*mNic*rNNi) +
+(mCr*mNic*rNCrNi) ) ) ) ) ;
+
+fC:= Power(10,((1873/T)*(((mCn*eCC)+(mMnn*eCMn)+(mSin*eCSi)+(mAln*eCAl)+
+(mCan*eCCa)+ (mOn*eCO) + (mSn*eCS) + (mNn*eCN) + (mCr*eCCr) +
+(mNic*eCNi) + (mCu*eCCu) + (mMo*eCMo) + (mTin*eCTi) + (mNbn*eCNb) +
+(mVn*eCV) )+((mCn*mCn*rCC)+ (mSin*msin*rCSi)+(mAln*mAln*rCAl)+
+(mCan*mCan*rCCa)+(mSn*mSn*rCS)))) );
+
+fTi:= Power(10,((1873/T)*(( (mOn*eTiO) + (mSn*eTiS) +
+(mCr*eTiCr) + (mNn*eTiN) + (mTin*eTiTi) ) + ( (mTin*mTin*rTiTi)+
+(mCr*mCr*rTiCr)+(mNic*mNic*rTiNi)+(mCr*mNic*rTiCrNi) ) ) ) );
+
+fAl:= Power(10,((1873/T)*(((mCn*eAlC)+(mSin*eAlSi)+(mAln*eAlAl)+
+(mCan*eAlCa)+ (mOn*eAlO) + (mSn*eAlS) + (mNn*eAlN) )+((mCn*mCn*rAlC)+
+(mSin*mSin*rAlSi)+(mAln*mAln*rAlAl) ) ) ) );
+
+fNb:= Power(10,((1873/T)*(( (mCn*eNbC)+ (mOn*eNbO) + (mSn*eNbS) +
+(mNn*eNbN) )+( mSn*mSn*rNbS ) ) ) );
+
+fV:= Power(10,((1873/T)*(((mCn*eVC)+(mSin*eVSi)+
+(mOn*eVO) + (mSn*eVS) + (mVn*eVV) + (mNn*eVN) )+( (mSin*mSin*rVSi) +
+(mVn*mVn*rVV) + (mCn*mCn*rVC) ) ) ) );
+
+fZr:= Power(10,((1873/T)*(((mSin*eZrSi)+(mSn*eZrS) + (mNn*eZrN) ) +
+(mSn*mSn*rZrS) ) ) );
+
+
+
+
+{максимально возможные расходы элементов на
+образование карбидов и нитридов в условиях
+данного состава}
+
+mTiicarbmax:=(mCn/MrC)*MrTi;
+if mTiicarbmax>mTin then
+mTiicarbmax:=mTin;
+
+mNbicarbmax:=(mCn/MrC)*MrNb;
+if mNbicarbmax>mNbn then
+mNbicarbmax:=mNbn;
+
+mVicarbmax:=(mCn/(MrC))*MrV;
+if mVicarbmax>mVn then
+mVicarbmax:=mVn;
+
+mAlinitrmax:=(mNn/MrN)*MrAl;
+if mAlinitrmax>mAln then
+mAlinitrmax:=mAln;
+
+mZricarbmax:=(mCn/MrC)*MrZr;
+if mZricarbmax>mZrn then
+mZricarbmax:=mZrn;
+
+mTiinitrmax:=(mNn/MrN)*MrTi;
+if mTiinitrmax>mTin then
+mTiinitrmax:=mTin;
+
+mNbinitrmax:=(mNn/MrN)*MrNb;
+if mNbinitrmax>mNbn then
+mNbinitrmax:=mNbn;
+
+mVinitrmax:=(mNn/MrN)*MrV;
+if mVinitrmax>mVn then
+mVinitrmax:=mVn;
+
+mZrinitrmax:=(mNn/MrN)*MrZr;
+if mZrinitrmax>mZrn then
+mZrinitrmax:=mZrn;
+
+
+{начальные значения коэффициентов активности
+карбидов и нитридов}
+
+fTiC:=1;
+fTiN:=1;
+fAlN:=1;
+fNbC:=1;
+fNbN:=1;
+fVC:=1;
+fVN:=1;
+fZrC:=1;
+fZrN:=1;
+
+{начальные значения расходов элементов}
+
+mTiicarb0:=0;
+mNbicarb0:=0;
+mVicarb0:=0;
+mAlinitr0:=0;
+mZricarb0:=0;
+mTiinitr0:=0;
+mNbinitr0:=0;
+mVinitr0:=0;
+mZrinitr0:=0;
+
+
+j3:=0;
+
+repeat
+
+mTiicarb0:=0;
+mNbicarb0:=0;
+mVicarb0:=0;
+mAlinitr0:=0;
+mZricarb0:=0;
+mTiinitr0:=0;
+mNbinitr0:=0;
+mVinitr0:=0;
+mZrinitr0:=0;
+
+mTiicarb:=mTiicarb0;
+mNbicarb:=mNbicarb0;
+mVicarb:=mVicarb0;
+mZricarb:=mZricarb0;
+mTiinitr:=mTiinitr0;
+mNbinitr:=mNbinitr0;
+mVinitr:=mVinitr0;
+mZrinitr:=mZrinitr0;
+mAlinitr:=mAlinitr0;
+
+
+
+repeat
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+
+{массы карбидов и нитридов}
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+{уравнения равновесия}
+
+
+TiCleft:=((mTiicarb)*(MrTi+MrC))/((mcarb+mnitr)*MrTi);
+TiCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KTiC*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fC*fTi)/fTiC);
+
+NbCleft:=((mNbicarb)*(MrNb+MrC))/((mcarb+mnitr)*MrNb);
+NbCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KNbC*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fC*fNb)/fNbC);
+
+AlNleft:=((mAlinitr)*(MrAl+MrN))/((mcarb+mnitr)*MrAl);
+AlNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KAlN*((mAln-mAlinitr)/
+(100-mcarb-mnitr))*((fN*fAl)/fAlN);
+
+VCleft:=((mVicarb)*(MrV+MrC))/((mcarb+mnitr)*MrV);
+VCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KVC*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fC*fV)/fVC);
+
+ZrCleft:=((mZricarb)*(MrZr+MrC))/((mcarb+mnitr)*MrZr);
+ZrCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KZrC*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fC*fZr)/fZrC);
+
+TiNleft:=((mTiinitr)*(MrTi+MrN))/((mcarb+mnitr)*MrTi);
+TiNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KTiN*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fN*fTi)/fTiN);
+
+NbNleft:=((mNbinitr)*(MrNb+MrN))/((mcarb+mnitr)*MrNb);
+NbNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KNbN*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fN*fNb)/fNbN);
+
+VNleft:=((mVinitr)*(MrV+MrN))/((mcarb+mnitr)*MrV);
+VNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KVN*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fN*fV)/fVN);
+
+ZrNleft:=((mZrinitr)*(MrZr+MrN))/((mcarb+mnitr)*MrZr);
+ZrNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KZrN*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fN*fZr)/fZrN);
+
+
+if (mTin=0) or (mCn=0) then
+difTiC:=0
+else
+difTiC:=((TiCleft-TiCright)/(TiCleft+epsilon));
+
+if (mNbn=0) or (mCn=0) then
+difNbC:=0
+else
+difNbC:=((NbCleft-NbCright)/(NbCleft+epsilon));
+
+if (mVn=0) or (mCn=0) then
+difVC:=0
+else
+difVC:=((VCleft-VCright)/(VCleft+epsilon));
+
+if (mZrn=0) or (mCn=0) then
+difZrC:=0
+else
+difZrC:=((ZrCleft-ZrCright)/(ZrCleft+epsilon));
+
+if (mTin=0) or (mNn=0) then
+difTiN:=0
+else
+difTiN:=((TiNleft-TiNright)/(TiNleft+epsilon));
+
+if (mNbn=0) or (mNn=0) then
+difNbN:=0
+else
+difNbN:=((NbNleft-NbNright)/(NbNleft+epsilon));
+
+if (mAln=0) or (mNn=0) then
+difAlN:=0
+else
+difAlN:=((AlNleft-AlNright)/(AlNleft+epsilon));
+
+if (mVn=0) or (mNn=0) then
+difVN:=0
+else
+difVN:=((VNleft-VNright)/(VNleft+epsilon));
+
+if (mZrn=0) or (mNn=0) then
+difZrN:=0
+else
+difZrN:=((ZrNleft-ZrNright)/(ZrNleft+epsilon));
+
+
+difTiNctr:=difTiN;
+difTiCctr:=difTiC;
+difNbCctr:=difNbC;
+difNbNctr:=difNbN;
+difVNctr:=difVN;
+difVCctr:=difVC;
+difZrCctr:=difZrC;
+difZrNctr:=difZrN;
+difAlNctr:=difAlN;
+
+
+dif[1]:= ABS(difTiCctr);
+dif[2]:= ABS(difNbCctr);
+dif[3]:= ABS(difVCctr);
+dif[4]:= ABS(difZrCctr);
+dif[5]:= ABS(difTiNctr);
+dif[6]:= ABS(difNbNctr);
+dif[7]:= ABS(difVNctr);
+dif[8]:= ABS(difZrNctr);
+dif[9]:= ABS(difAlNctr);
+
+maxdif:=MaxValue(dif);
+
+
+i2:=i2+1;
+i3:=i3+1;
+
+control1.Add('');
+control1[i2-1]:=floattostr(i3);
+control1.Add('');
+control1[i2]:=floattostr(difTiC);
+control1.Add('');
+control1[i2+1]:=floattostr(difNbC);
+control1.Add('');
+control1[i2+2]:=floattostr(difVC);
+control1.Add('');
+control1[i2+3]:=floattostr(difZrC);
+control1.Add('');
+control1[i2+4]:=floattostr(difAlN);
+control1.Add('');
+control1[i2+5]:=floattostr(difTiN);
+control1.Add('');
+control1[i2+6]:=floattostr(difNbN);
+control1.Add('');
+control1[i2+7]:=floattostr(difVN);
+control1.Add('');
+control1[i2+8]:=floattostr(difZrN);
+control1.Add('');
+control1[i2+9]:=floattostr(maxdif);
+control1.Add('');
+control1[i2+10]:=' ';
+control1.Add('');
+control1.Add('');
+i2:=i2+11;
+
+control1.SaveToFile('control1.txt');            
+
+
+i1:=0;
+
+if trunc(100000*ABS(difTiCctr)) >= trunc(100000*maxdif)
+then
+begin
+
+ni1:=10;
+i1:=0;
+di:=(mTiicarbmax-mTiicarb0)/ni1;
+mTiicarb:=mTiicarb0;
+difTiCctr:=difTiC;
+mTiicarb1:=mTiicarb0;
+
+mTiicarbpred:=mTiicarb0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiCleft:=((mTiicarb)*(MrTi+MrC))/((mcarb+mnitr)*MrTi);
+TiCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KTiC*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fC*fTi)/fTiC);
+
+difTiC:=((TiCleft-TiCright)/(TiCleft+epsilon));
+
+difTiCpred:=difTiC;
+
+repeat
+
+
+repeat
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiCleft:=((mTiicarb)*(MrTi+MrC))/((mcarb+mnitr)*MrTi);
+TiCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KTiC*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fC*fTi)/fTiC);
+
+difTiC:=((TiCleft-TiCright)/(TiCleft+epsilon));
+
+
+
+if ABS(difTiC)<0.00000000001
+then
+begin
+if ABS(difTiC)<=ABS(difTiCctr) then
+begin
+mTiicarb1:=mTiicarb;
+difTiCctr:=difTiC;
+end;
+end;
+
+
+if ((difTiC>0) and (difTiCpred<0)) or
+((difTiC<0) and (difTiCpred>0))
+then
+
+begin
+if ((difTiC>0) and (difTiCpred<0)) then
+begin
+mTiicarbd:=mTiicarbpred;
+mTiicarbt:=mTiicarb;
+
+repeat
+
+mTiicarb:=(mTiicarbd+mTiicarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiCleft:=((mTiicarb)*(MrTi+MrC))/((mcarb+mnitr)*MrTi);
+TiCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KTiC*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fC*fTi)/fTiC);
+
+difTiC:=((TiCleft-TiCright)/(TiCleft+epsilon));
+
+if difTiC<0 then
+mTiicarbd:=mTiicarb;
+
+if difTiC>0 then
+mTiicarbt:=mTiicarb;
+
+
+until ABS(difTiC)<0.00000000001;
+
+
+if ABS(difTiC)<0.0000000001
+then
+begin
+if ABS(difTiC)<=ABS(difTiCctr) then
+begin
+mTiicarb1:=mTiicarb;
+difTiCctr:=difTiC;
+end;
+end;
+
+end;
+
+if ((difTiC<0) and (difTiCpred>0)) then
+begin
+mTiicarbt:=mTiicarbpred;
+mTiicarbd:=mTiicarb;
+
+repeat
+
+
+mTiicarb:=(mTiicarbd+mTiicarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiCleft:=((mTiicarb)*(MrTi+MrC))/((mcarb+mnitr)*MrTi);
+TiCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KTiC*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fC*fTi)/fTiC);
+
+difTiC:=((TiCleft-TiCright)/(TiCleft+epsilon));
+
+if difTiC<0 then
+mTiicarbd:=mTiicarb;
+
+if difTiC>0 then
+mTiicarbt:=mTiicarb;
+
+until ABS(difTiC)<0.00000000001;
+
+if ABS(difTiC)<0.00000000001
+then
+begin
+if ABS(difTiC)<=ABS(difTiCctr) then
+begin
+mTiicarb1:=mTiicarb;
+difTiCctr:=difTiC;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+difTiCpred:=difTiC;
+mTiicarbpred:=mTiicarb;
+
+mTiicarb:=mTiicarb+di;
+
+i1:=i1+1;
+
+
+until i1=ni1+1;
+
+if ABS(difTiCctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mTiicarbmax-mTiicarb0)/ni1;
+mTiicarb:=mTiicarb0;
+end
+else
+mTiicarb:=mTiicarb1;
+
+
+until (ABS(difTiCctr)<0.00000000006)  ;
+
+
+end;
+
+
+
+if trunc(100000*ABS(difNbCctr))>= trunc(100000*maxdif)
+then
+begin
+
+
+ni1:=10;
+i1:=0;
+di:=(mNbicarbmax-mNbicarb0)/ni1;
+mNbicarb:=mNbicarb0;
+difNbCctr:=difNbC;
+mNbicarb1:=mNbicarb0;
+
+mNbicarbpred:=mNbicarb0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbCleft:=((mNbicarb)*(MrNb+MrC))/((mcarb+mnitr)*MrNb);
+NbCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KNbC*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fC*fNb)/fNbC);
+
+difNbC:=((NbCleft-NbCright)/(NbCleft+epsilon));
+
+difNbCpred:=difNbC;
+
+repeat
+
+i1:=0;
+
+repeat
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbCleft:=((mNbicarb)*(MrNb+MrC))/((mcarb+mnitr)*MrNb);
+NbCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KNbC*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fC*fNb)/fNbC);
+
+difNbC:=((NbCleft-NbCright)/(NbCleft+epsilon));
+
+
+if ABS(difNbC)<0.00000000001
+then
+begin
+if ABS(difNbC)<=ABS(difNbCctr) then
+begin
+mNbicarb1:=mNbicarb;
+difNbCctr:=difNbC;
+end;
+end;
+
+
+if ((difNbC>0) and (difNbCpred<0)) or
+((difNbC<0) and (difNbCpred>0))
+then
+
+begin
+if ((difNbC>0) and (difNbCpred<0)) then
+begin
+mNbicarbd:=mNbicarbpred;
+mNbicarbt:=mNbicarb;
+
+repeat
+
+mNbicarb:=(mNbicarbd+mNbicarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbCleft:=((mNbicarb)*(MrNb+MrC))/((mcarb+mnitr)*MrNb);
+NbCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KNbC*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fC*fNb)/fNbC);
+
+difNbC:=((NbCleft-NbCright)/(NbCleft+epsilon));
+
+if difNbC<0 then
+mNbicarbd:=mNbicarb;
+
+if difNbC>0 then
+mNbicarbt:=mNbicarb;
+
+
+until (ABS(difNbC)<0.00000000001) ;
+
+if ABS(difNbC)<0.0000000001
+then
+begin
+if ABS(difNbC)<=ABS(difNbCctr) then
+begin
+mNbicarb1:=mNbicarb;
+difNbCctr:=difNbC;
+end;
+end;
+
+end;
+
+if ((difNbC<0) and (difNbCpred>0)) then
+begin
+mNbicarbt:=mNbicarbpred;
+mNbicarbd:=mNbicarb;
+
+repeat
+
+mNbicarb:=(mNbicarbd+mNbicarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbCleft:=((mNbicarb)*(MrNb+MrC))/((mcarb+mnitr)*MrNb);
+NbCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KNbC*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fC*fNb)/fNbC);
+
+difNbC:=((NbCleft-NbCright)/(NbCleft+epsilon));
+
+if difNbC<0 then
+mNbicarbd:=mNbicarb;
+
+if difNbC>0 then
+mNbicarbt:=mNbicarb;
+
+until ABS(difNbC)<0.00000000001;
+
+if ABS(difNbC)<0.00000000001
+then
+begin
+if ABS(difNbC)<=ABS(difNbCctr) then
+begin
+mNbicarb1:=mNbicarb;
+difNbCctr:=difNbC;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difNbCpred:=difNbC;
+mNbicarbpred:=mNbicarb;
+
+mNbicarb:=mNbicarb+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difNbCctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mNbicarbmax-mNbicarb0)/ni1;
+mNbicarb:=mNbicarb0;
+end
+else
+mNbicarb:=mNbicarb1;
+
+
+
+until (ABS(difNbCctr)<0.00000000006)  ;
+
+
+end;
+
+
+if trunc(100000*ABS(difVCctr))>= trunc(100000*maxdif)
+then
+begin
+
+
+ni1:=10;
+i1:=0;
+di:=(mVicarbmax-mVicarb0)/ni1;
+mVicarb:=mVicarb0;
+difVCctr:=difVC;
+mVicarb1:=mVicarb0;
+
+mVicarbpred:=mVicarb0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VCleft:=((mVicarb)*(MrV+MrC))/((mcarb+mnitr)*MrV);
+VCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KVC*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fC*fV)/fVC);
+
+difVC:=((VCleft-VCright)/(VCleft+epsilon));
+
+difVCpred:=difVC;
+
+repeat
+
+i1:=0;
+
+repeat
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VCleft:=((mVicarb)*(MrV+MrC))/((mcarb+mnitr)*MrV);
+VCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KVC*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fC*fV)/fVC);
+
+difVC:=((VCleft-VCright)/(VCleft+epsilon));
+
+
+if ABS(difVC)<0.00000000001
+then
+begin
+if ABS(difVC)<=ABS(difVCctr) then
+begin
+mVicarb1:=mVicarb;
+difVCctr:=difVC;
+end;
+end;
+
+
+if ((difVC>0) and (difVCpred<0)) or
+((difVC<0) and (difVCpred>0))
+then
+
+begin
+if ((difVC>0) and (difVCpred<0)) then
+begin
+mVicarbd:=mVicarbpred;
+mVicarbt:=mVicarb;
+
+repeat
+
+mVicarb:=(mVicarbd+mVicarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VCleft:=((mVicarb)*(MrV+MrC))/((mcarb+mnitr)*MrV);
+VCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KVC*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fC*fV)/fVC);
+
+difVC:=((VCleft-VCright)/(VCleft+epsilon));
+
+if difVC<0 then
+mVicarbd:=mVicarb;
+
+if difVC>0 then
+mVicarbt:=mVicarb;
+
+
+until (ABS(difVC)<0.00000000001) ;
+
+if ABS(difVC)<0.0000000001
+then
+begin
+if ABS(difVC)<=ABS(difVCctr) then
+begin
+mVicarb1:=mVicarb;
+difVCctr:=difVC;
+end;
+end;
+
+end;
+
+if ((difVC<0) and (difVCpred>0)) then
+begin
+mVicarbt:=mVicarbpred;
+mVicarbd:=mVicarb;
+
+repeat
+
+mVicarb:=(mVicarbd+mVicarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VCleft:=((mVicarb)*(MrV+MrC))/((mcarb+mnitr)*MrV);
+VCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KVC*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fC*fV)/fVC);
+
+difVC:=((VCleft-VCright)/(VCleft+epsilon));
+
+if difVC<0 then
+mVicarbd:=mVicarb;
+
+if difVC>0 then
+mVicarbt:=mVicarb;
+
+until ABS(difVC)<0.00000000001;
+
+if ABS(difVC)<0.00000000001
+then
+begin
+if ABS(difVC)<=ABS(difVCctr) then
+begin
+mVicarb1:=mVicarb;
+difVCctr:=difVC;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difVCpred:=difVC;
+mVicarbpred:=mVicarb;
+
+mVicarb:=mVicarb+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difVCctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mVicarbmax-mVicarb0)/ni1;
+mVicarb:=mVicarb0;
+end
+else
+mVicarb:=mVicarb1;
+
+
+
+until (ABS(difVCctr)<0.00000000006)  ;
+
+
+end;
+
+
+if trunc(100000*ABS(difZrCctr))>= trunc(100000*maxdif)
+then
+begin
+
+
+ni1:=10;
+i1:=0;
+di:=(mZricarbmax-mZricarb0)/ni1;
+mZricarb:=mZricarb0;
+difZrCctr:=difZrC;
+mZricarb1:=mZricarb0;
+
+mZricarbpred:=mZricarb0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrCleft:=((mZricarb)*(MrZr+MrC))/((mcarb+mnitr)*MrZr);
+ZrCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KZrC*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fC*fZr)/fZrC);
+
+difZrC:=((ZrCleft-ZrCright)/(ZrCleft+epsilon));
+
+difZrCpred:=difZrC;
+
+repeat
+
+i1:=0;
+
+repeat
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrCleft:=((mZricarb)*(MrZr+MrC))/((mcarb+mnitr)*MrZr);
+ZrCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KZrC*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fC*fZr)/fZrC);
+
+difZrC:=((ZrCleft-ZrCright)/(ZrCleft+epsilon));
+
+
+if ABS(difZrC)<0.00000000001
+then
+begin
+if ABS(difZrC)<=ABS(difZrCctr) then
+begin
+mZricarb1:=mZricarb;
+difZrCctr:=difZrC;
+end;
+end;
+
+
+if ((difZrC>0) and (difZrCpred<0)) or
+((difZrC<0) and (difZrCpred>0))
+then
+
+begin
+if ((difZrC>0) and (difZrCpred<0)) then
+begin
+mZricarbd:=mZricarbpred;
+mZricarbt:=mZricarb;
+
+repeat
+
+mZricarb:=(mZricarbd+mZricarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrCleft:=((mZricarb)*(MrZr+MrC))/((mcarb+mnitr)*MrZr);
+ZrCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KZrC*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fC*fZr)/fZrC);
+
+difZrC:=((ZrCleft-ZrCright)/(ZrCleft+epsilon));
+
+if difZrC<0 then
+mZricarbd:=mZricarb;
+
+if difZrC>0 then
+mZricarbt:=mZricarb;
+
+
+until (ABS(difZrC)<0.00000000001) ;
+
+if ABS(difZrC)<0.0000000001
+then
+begin
+if ABS(difZrC)<=ABS(difZrCctr) then
+begin
+mZricarb1:=mZricarb;
+difZrCctr:=difZrC;
+end;
+end;
+
+end;
+
+if ((difZrC<0) and (difZrCpred>0)) then
+begin
+mZricarbt:=mZricarbpred;
+mZricarbd:=mZricarb;
+
+repeat
+
+mZricarb:=(mZricarbd+mZricarbt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrCleft:=((mZricarb)*(MrZr+MrC))/((mcarb+mnitr)*MrZr);
+ZrCright:=10000*((mCn-mCi)/(100-mcarb-mnitr))*KZrC*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fC*fZr)/fZrC);
+
+difZrC:=((ZrCleft-ZrCright)/(ZrCleft+epsilon));
+
+if difZrC<0 then
+mZricarbd:=mZricarb;
+
+if difZrC>0 then
+mZricarbt:=mZricarb;
+
+until ABS(difZrC)<0.00000000001;
+
+if ABS(difZrC)<0.00000000001
+then
+begin
+if ABS(difZrC)<=ABS(difZrCctr) then
+begin
+mZricarb1:=mZricarb;
+difZrCctr:=difZrC;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difZrCpred:=difZrC;
+mZricarbpred:=mZricarb;
+
+mZricarb:=mZricarb+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difZrCctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mZricarbmax-mZricarb0)/ni1;
+mZricarb:=mZricarb0;
+end
+else
+mZricarb:=mZricarb1;
+
+until (ABS(difZrCctr)<0.00000000006)  ;
+
+end;
+
+
+
+
+if trunc(10000*ABS(difAlNctr))>= trunc(10000*maxdif)
+then
+begin
+
+
+ni1:=10;
+i1:=0;
+di:=(mAlinitrmax-mAlinitr0)/ni1;
+mAlinitr:=mAlinitr0;
+difAlNctr:=difAlN;
+mAlinitr1:=mAlinitr0;
+
+mAlinitrpred:=mAlinitr0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+AlNleft:=((mAlinitr)*(MrAl+MrN))/((mcarb+mnitr)*MrAl);
+AlNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KAlN*((mAln-mAlinitr)/
+(100-mcarb-mnitr))*((fN*fAl)/fAlN);
+
+difAlN:=((AlNleft-AlNright)/(AlNleft+epsilon));
+
+difAlNpred:=difAlN;
+
+repeat
+
+i1:=0;
+
+repeat
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+AlNleft:=((mAlinitr)*(MrAl+MrN))/((mcarb+mnitr)*MrAl);
+AlNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KAlN*((mAln-mAlinitr)/
+(100-mcarb-mnitr))*((fN*fAl)/fAlN);
+
+difAlN:=((AlNleft-AlNright)/(AlNleft+epsilon));
+
+
+if ABS(difAlN)<0.00000000001
+then
+begin
+if ABS(difAlN)<=ABS(difAlNctr) then
+begin
+mAlinitr1:=mAlinitr;
+difAlNctr:=difAlN;
+end;
+end;
+
+if ((difAlN>0) and (difAlNpred<0)) or
+((difAlN<0) and (difAlNpred>0))
+then
+
+begin
+if ((difAlN>0) and (difAlNpred<0)) then
+begin
+mAlinitrd:=mAlinitrpred;
+mAlinitrt:=mAlinitr;
+
+repeat
+
+mAlinitr:=(mAlinitrd+mAlinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+AlNleft:=((mAlinitr)*(MrAl+MrN))/((mcarb+mnitr)*MrAl);
+AlNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KAlN*((mAln-mAlinitr)/
+(100-mcarb-mnitr))*((fN*fAl)/fAlN);
+
+if AlNleft<=0  then
+difAlN:=((AlNleft-AlNright)/(AlNleft+epsilon))
+else
+difAlN:=((AlNleft-AlNright)/(AlNleft));
+
+if difAlN<0 then
+mAlinitrd:=mAlinitr;
+
+if difAlN>0 then
+mAlinitrt:=mAlinitr;
+
+
+
+until (ABS(difAlN)<0.00000000001) ;
+
+if (ABS(difAlN)<0.0000000001)
+then
+begin
+if ABS(difAlN)<=ABS(difAlNctr) then
+begin
+mAlinitr1:=mAlinitr;
+difAlNctr:=difAlN;
+end;
+end;
+
+end;
+
+if ((difAlN<0) and (difAlNpred>0)) then
+begin
+mAlinitrt:=mAlinitrpred;
+mAlinitrd:=mAlinitr;
+
+repeat
+
+mAlinitr:=(mAlinitrd+mAlinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+AlNleft:=((mAlinitr)*(MrAl+MrN))/((mcarb+mnitr)*MrAl);
+AlNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KAlN*((mAln-mAlinitr)/
+(100-mcarb-mnitr))*((fN*fAl)/fAlN);
+
+difAlN:=((AlNleft-AlNright)/(AlNleft+epsilon));
+
+if difAlN<0 then
+mAlinitrd:=mAlinitr;
+
+if difAlN>0 then
+mAlinitrt:=mAlinitr;
+
+until ABS(difAlN)<0.00000000001;
+
+if ABS(difAlN)<0.00000000001
+then
+begin
+if ABS(difAlN)<=ABS(difAlNctr) then
+begin
+mAlinitr1:=mAlinitr;
+difAlNctr:=difAlN;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difAlNpred:=difAlN;
+mAlinitrpred:=mAlinitr;
+
+mAlinitr:=mAlinitr+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difAlNctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mAlinitrmax-mAlinitr0)/ni1;
+mAlinitr:=mAlinitr0;
+end
+else
+mAlinitr:=mAlinitr1;
+
+
+
+until (ABS(difAlNctr)<0.00000000006)  ;
+
+
+end;
+
+
+
+if trunc(10000*ABS(difTiNctr))>= trunc(10000*maxdif)
+then
+begin
+
+ni1:=10;
+i1:=0;
+di:=(mTiinitrmax-mTiinitr0)/ni1;
+mTiinitr:=mTiinitr0;
+difTiNctr:=difTiN;
+mTiinitr1:=mTiinitr0;
+
+mTiinitrpred:=mTiinitr0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiNleft:=((mTiinitr)*(MrTi+MrN))/((mcarb+mnitr)*MrTi);
+TiNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KTiN*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fN*fTi)/fTiN);
+
+difTiN:=((TiNleft-TiNright)/(TiNleft+epsilon));
+
+difTiNpred:=difTiN;
+
+repeat
+
+i1:=0;
+
+repeat
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiNleft:=((mTiinitr)*(MrTi+MrN))/((mcarb+mnitr)*MrTi);
+TiNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KTiN*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fN*fTi)/fTiN);
+
+difTiN:=((TiNleft-TiNright)/(TiNleft+epsilon));
+
+
+if ABS(difTiN)<0.00000000001
+then
+begin
+if ABS(difTiN)<=ABS(difTiNctr) then
+begin
+mTiinitr1:=mTiinitr;
+difTiNctr:=difTiN;
+end;
+end;
+
+if ((difTiN>0) and (difTiNpred<0)) or
+((difTiN<0) and (difTiNpred>0))
+then
+
+begin
+if ((difTiN>0) and (difTiNpred<0)) then
+begin
+mTiinitrd:=mTiinitrpred;
+mTiinitrt:=mTiinitr;
+
+repeat
+
+mTiinitr:=(mTiinitrd+mTiinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiNleft:=((mTiinitr)*(MrTi+MrN))/((mcarb+mnitr)*MrTi);
+TiNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KTiN*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fN*fTi)/fTiN);
+
+difTiN:=((TiNleft-TiNright)/(TiNleft+epsilon));
+
+if difTiN<0 then
+mTiinitrd:=mTiinitr;
+
+if difTiN>0 then
+mTiinitrt:=mTiinitr;
+
+
+until (ABS(difTiN)<0.00000000001) ;
+
+if ABS(difTiN)<0.0000000001
+then
+begin
+if ABS(difTiN)<=ABS(difTiNctr) then
+begin
+mTiinitr1:=mTiinitr;
+difTiNctr:=difTiN;
+end;
+end;
+
+end;
+
+if ((difTiN<0) and (difTiNpred>0)) then
+begin
+mTiinitrt:=mTiinitrpred;
+mTiinitrd:=mTiinitr;
+
+repeat
+
+mTiinitr:=(mTiinitrd+mTiinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+TiNleft:=((mTiinitr)*(MrTi+MrN))/((mcarb+mnitr)*MrTi);
+TiNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KTiN*((mTin-mTiicarb-mTiinitr)/
+(100-mcarb-mnitr))*((fN*fTi)/fTiN);
+
+difTiN:=((TiNleft-TiNright)/(TiNleft+epsilon));
+
+if difTiN<0 then
+mTiinitrd:=mTiinitr;
+
+if difTiN>0 then
+mTiinitrt:=mTiinitr;
+
+until ABS(difTiN)<0.00000000001;
+
+if ABS(difTiN)<0.00000000001
+then
+begin
+if ABS(difTiN)<=ABS(difTiNctr) then
+begin
+mTiinitr1:=mTiinitr;
+difTiNctr:=difTiN;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difTiNpred:=difTiN;
+mTiinitrpred:=mTiinitr;
+
+mTiinitr:=mTiinitr+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difTiNctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mTiinitrmax-mTiinitr0)/ni1;
+mTiinitr:=mTiinitr0;
+end
+else
+mTiinitr:=mTiinitr1;
+
+
+
+until (ABS(difTiNctr)<0.00000000006)  ;
+
+
+end;
+
+
+if trunc(100000*ABS(difNbNctr))>= trunc(100000*maxdif)
+then
+begin
+
+ni1:=10;
+i1:=0;
+di:=(mNbinitrmax-mNbinitr0)/ni1;
+mNbinitr:=mNbinitr0;
+difNbNctr:=difNbN;
+mNbinitr1:=mNbinitr0;
+
+mNbinitrpred:=mNbinitr0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbNleft:=((mNbinitr)*(MrNb+MrN))/((mcarb+mnitr)*MrNb);
+NbNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KNbN*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fN*fNb)/fNbN);
+
+difNbN:=((NbNleft-NbNright)/(NbNleft+epsilon));
+
+difNbNpred:=difNbN;
+
+repeat
+
+i1:=0;
+
+repeat
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbNleft:=((mNbinitr)*(MrNb+MrN))/((mcarb+mnitr)*MrNb);
+NbNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KNbN*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fN*fNb)/fNbN);
+
+difNbN:=((NbNleft-NbNright)/(NbNleft+epsilon));
+
+
+if ABS(difNbN)<0.00000000001
+then
+begin
+if ABS(difNbN)<=ABS(difNbNctr) then
+begin
+mNbinitr1:=mNbinitr;
+difNbNctr:=difNbN;
+end;
+end;
+
+if ((difNbN>0) and (difNbNpred<0)) or
+((difNbN<0) and (difNbNpred>0))
+then
+
+begin
+if ((difNbN>0) and (difNbNpred<0)) then
+begin
+mNbinitrd:=mNbinitrpred;
+mNbinitrt:=mNbinitr;
+
+repeat
+
+mNbinitr:=(mNbinitrd+mNbinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbNleft:=((mNbinitr)*(MrNb+MrN))/((mcarb+mnitr)*MrNb);
+NbNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KNbN*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fN*fNb)/fNbN);
+
+difNbN:=((NbNleft-NbNright)/(NbNleft+epsilon));
+
+if difNbN<0 then
+mNbinitrd:=mNbinitr;
+
+if difNbN>0 then
+mNbinitrt:=mNbinitr;
+
+
+until (ABS(difNbN)<0.00000000001) ;
+
+if ABS(difNbN)<0.0000000001
+then
+begin
+if ABS(difNbN)<=ABS(difNbNctr) then
+begin
+mNbinitr1:=mNbinitr;
+difNbNctr:=difNbN;
+end;
+end;
+
+end;
+
+if ((difNbN<0) and (difNbNpred>0)) then
+begin
+mNbinitrt:=mNbinitrpred;
+mNbinitrd:=mNbinitr;
+
+repeat
+
+mNbinitr:=(mNbinitrd+mNbinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+NbNleft:=((mNbinitr)*(MrNb+MrN))/((mcarb+mnitr)*MrNb);
+NbNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KNbN*((mNbn-mNbicarb-mNbinitr)/
+(100-mcarb-mnitr))*((fN*fNb)/fNbN);
+
+difNbN:=((NbNleft-NbNright)/(NbNleft+epsilon));
+
+if difNbN<0 then
+mNbinitrd:=mNbinitr;
+
+if difNbN>0 then
+mNbinitrt:=mNbinitr;
+
+until ABS(difNbN)<0.00000000001;
+
+if ABS(difNbN)<0.00000000001
+then
+begin
+if ABS(difNbN)<=ABS(difNbNctr) then
+begin
+mNbinitr1:=mNbinitr;
+difNbNctr:=difNbN;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difNbNpred:=difNbN;
+mNbinitrpred:=mNbinitr;
+
+mNbinitr:=mNbinitr+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difNbNctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mNbinitrmax-mNbinitr0)/ni1;
+mNbinitr:=mNbinitr0;
+end
+else
+mNbinitr:=mNbinitr1;
+
+
+
+until (ABS(difNbNctr)<0.00000000006)  ;
+
+
+end;
+
+
+if trunc(100000*ABS(difVNctr))>= trunc(100000*maxdif)
+then
+begin
+
+ni1:=10;
+i1:=0;
+di:=(mVinitrmax-mVinitr0)/ni1;
+mVinitr:=mVinitr0;
+difVNctr:=difVN;
+mVinitr1:=mVinitr0;
+
+mVinitrpred:=mVinitr0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VNleft:=((mVinitr)*(MrV+MrN))/((mcarb+mnitr)*MrV);
+VNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KVN*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fN*fV)/fVN);
+
+difVN:=((VNleft-VNright)/(VNleft+epsilon));
+
+difVNpred:=difVN;
+
+repeat
+
+i1:=0;
+
+repeat
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VNleft:=((mVinitr)*(MrV+MrN))/((mcarb+mnitr)*MrV);
+VNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KVN*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fN*fV)/fVN);
+
+difVN:=((VNleft-VNright)/(VNleft+epsilon));
+
+
+if ABS(difVN)<0.00000000001
+then
+begin
+if ABS(difVN)<=ABS(difVNctr) then
+begin
+mVinitr1:=mVinitr;
+difVNctr:=difVN;
+end;
+end;
+
+if ((difVN>0) and (difVNpred<0)) or
+((difVN<0) and (difVNpred>0))
+then
+
+begin
+if ((difVN>0) and (difVNpred<0)) then
+begin
+mVinitrd:=mVinitrpred;
+mVinitrt:=mVinitr;
+
+repeat
+
+mVinitr:=(mVinitrd+mVinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VNleft:=((mVinitr)*(MrV+MrN))/((mcarb+mnitr)*MrV);
+VNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KVN*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fN*fV)/fVN);
+
+difVN:=((VNleft-VNright)/(VNleft+epsilon));
+
+if difVN<0 then
+mVinitrd:=mVinitr;
+
+if difVN>0 then
+mVinitrt:=mVinitr;
+
+
+until (ABS(difVN)<0.00000000001) ;
+
+if ABS(difVN)<0.0000000001
+then
+begin
+if ABS(difVN)<=ABS(difVNctr) then
+begin
+mVinitr1:=mVinitr;
+difVNctr:=difVN;
+end;
+end;
+
+end;
+
+if ((difVN<0) and (difVNpred>0)) then
+begin
+mVinitrt:=mVinitrpred;
+mVinitrd:=mVinitr;
+
+repeat
+
+mVinitr:=(mVinitrd+mVinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+VNleft:=((mVinitr)*(MrV+MrN))/((mcarb+mnitr)*MrV);
+VNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KVN*((mVn-mVicarb-mVinitr)/
+(100-mcarb-mnitr))*((fN*fV)/fVN);
+
+difVN:=((VNleft-VNright)/(VNleft+epsilon));
+
+if difVN<0 then
+mVinitrd:=mVinitr;
+
+if difVN>0 then
+mVinitrt:=mVinitr;
+
+until ABS(difVN)<0.00000000001;
+
+if ABS(difVN)<0.00000000001
+then
+begin
+if ABS(difVN)<=ABS(difVNctr) then
+begin
+mVinitr1:=mVinitr;
+difVNctr:=difVN;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difVNpred:=difVN;
+mVinitrpred:=mVinitr;
+
+mVinitr:=mVinitr+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difVNctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mVinitrmax-mVinitr0)/ni1;
+mVinitr:=mVinitr0;
+end
+else
+mVinitr:=mVinitr1;
+
+
+
+until (ABS(difVNctr)<0.00000000006)  ;
+
+
+end;
+
+
+
+if trunc(100000*ABS(difZrNctr))>= trunc(100000*maxdif)
+then
+begin
+
+ni1:=10;
+i1:=0;
+di:=(mZrinitrmax-mZrinitr0)/ni1;
+mZrinitr:=mZrinitr0;
+difZrNctr:=difZrN;
+mZrinitr1:=mZrinitr0;
+
+mZrinitrpred:=mZrinitr0;
+
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrNleft:=((mZrinitr)*(MrZr+MrZr))/((mcarb+mnitr)*MrZr);
+ZrNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KZrN*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fN*fZr)/fZrN);
+
+difZrN:=((ZrNleft-ZrNright)/(ZrNleft+epsilon));
+
+difZrNpred:=difZrN;
+
+repeat
+
+i1:=0;
+
+repeat
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrNleft:=((mZrinitr)*(MrZr+MrN))/((mcarb+mnitr)*MrZr);
+ZrNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KZrN*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fN*fZr)/fZrN);
+
+difZrN:=((ZrNleft-ZrNright)/(ZrNleft+epsilon));
+
+
+if ABS(difZrN)<0.00000000001
+then
+begin
+if ABS(difZrN)<=ABS(difZrNctr) then
+begin
+mZrinitr1:=mZrinitr;
+difZrNctr:=difZrN;
+end;
+end;
+
+if ((difZrN>0) and (difZrNpred<0)) or
+((difZrN<0) and (difZrNpred>0))
+then
+
+begin
+if ((difZrN>0) and (difZrNpred<0)) then
+begin
+mZrinitrd:=mZrinitrpred;
+mZrinitrt:=mZrinitr;
+
+repeat
+
+mZrinitr:=(mZrinitrd+mZrinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrNleft:=((mZrinitr)*(MrZr+MrN))/((mcarb+mnitr)*MrZr);
+ZrNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KZrN*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fN*fZr)/fZrN);
+
+difZrN:=((ZrNleft-ZrNright)/(ZrNleft+epsilon));
+
+if difZrN<0 then
+mZrinitrd:=mZrinitr;
+
+if difZrN>0 then
+mZrinitrt:=mZrinitr;
+
+
+until (ABS(difZrN)<0.00000000001) ;
+
+if ABS(difZrN)<0.0000000001
+then
+begin
+if ABS(difZrN)<=ABS(difZrNctr) then
+begin
+mZrinitr1:=mZrinitr;
+difZrNctr:=difZrN;
+end;
+end;
+
+end;
+
+if ((difZrN<0) and (difZrNpred>0)) then
+begin
+mZrinitrt:=mZrinitrpred;
+mZrinitrd:=mZrinitr;
+
+repeat
+
+mZrinitr:=(mZrinitrd+mZrinitrt)/2;
+
+mCi:=MrC*((mTiicarb/MrTi)+(mNbicarb/MrNb)+(mVicarb/MrV)+
+(mZricarb/MrZr));
+
+mNi:=MrN*((mTiinitr/MrTi)+(mNbinitr/MrNb)+
++(mVinitr/MrV)+(mZrinitr/MrZr)+(mAlinitr/MrAl) );
+
+mcarb:=mTiicarb+mNbicarb+mVicarb+mZricarb+mCi;
+mnitr:=mTiinitr+mNbinitr+mVinitr+mZrinitr+mAlinitr+mNi;
+
+if (mcarb=0) and (mnitr=0) then
+mcarb:=epsilon
+else
+mcarb:=mcarb+epsilon;
+
+ZrNleft:=((mZrinitr)*(MrZr+MrN))/((mcarb+mnitr)*MrZr);
+ZrNright:=10000*((mNn-mNi)/(100-mcarb-mnitr))*KZrN*((mZrn-mZricarb-mZrinitr)/
+(100-mcarb-mnitr))*((fN*fZr)/fZrN);
+
+difZrN:=((ZrNleft-ZrNright)/(ZrNleft+epsilon));
+
+if difZrN<0 then
+mZrinitrd:=mZrinitr;
+
+if difZrN>0 then
+mZrinitrt:=mZrinitr;
+
+until ABS(difZrN)<0.00000000001;
+
+if ABS(difZrN)<0.00000000001
+then
+begin
+if ABS(difZrN)<=ABS(difZrNctr) then
+begin
+mZrinitr1:=mZrinitr;
+difZrNctr:=difZrN;
+end;
+end;
+
+
+
+end;
+
+i1:=ni1{-1};
+
+end;
+
+
+
+difZrNpred:=difZrN;
+mZrinitrpred:=mZrinitr;
+
+mZrinitr:=mZrinitr+di;
+
+i1:=i1+1;
+
+until i1=ni1+1;
+
+if ABS(difZrNctr)>0.00000000005 then
+begin
+ni1:=ni1*10;
+di:=(mZrinitrmax-mZrinitr0)/ni1;
+mZrinitr:=mZrinitr0;
+end
+else
+mZrinitr:=mZrinitr1;
+
+
+
+until (ABS(difZrNctr)<0.00000000006)  ;
+
+
+end;
+
+
+
+{
+i2:=i2+1;
+i3:=i3+1;
+
+control1.Add('');
+control1[i2-1]:=floattostr(i3);
+control1.Add('');
+control1[i2]:=floattostr(difTiC);
+control1.Add('');
+control1[i2+1]:=floattostr(difNbC);
+control1.Add('');
+control1[i2+2]:=floattostr(difVC);
+control1.Add('');
+control1[i2+3]:=floattostr(difZrC);
+control1.Add('');
+control1[i2+4]:=floattostr(difAlN);
+control1.Add('');
+control1[i2+5]:=floattostr(difTiN);
+control1.Add('');
+control1[i2+6]:=floattostr(difNbN);
+control1.Add('');
+control1[i2+7]:=floattostr(difVN);
+control1.Add('');
+control1[i2+8]:=floattostr(difZrN);
+control1.Add('');
+control1[i2+9]:=floattostr(maxdif);
+control1.Add('');
+control1[i2+10]:=' ';
+control1.Add('');
+control1.Add('');
+i2:=i2+11;
+
+control1.SaveToFile('control1.txt');
+
+}
+
+{                    
+
+i2:=i2+1;
+i3:=i3+1;
+
+control1.Add('');
+control1[i2-1]:=floattostr(mNbicarb);
+control1.Add('');
+control1[i2]:=floattostr(difNbC);
+control1.Add('');
+control1[i2+1]:=' ';
+control1.Add('');
+control1.SaveToFile('control1.txt');
+i2:=i2+2;
+}
+
+
+
+until ((ABS(difTiCctr)<0.04) and (ABS(difNbCctr)<0.04)
+and (ABS(difVCctr)<0.04) and (ABS(difZrCctr)<0.04)
+and (ABS(difAlNctr)<0.04) and (ABS(difTiNctr)<0.04)
+and (ABS(difNbNctr)<0.04) and (ABS(difVNctr)<0.04)
+and (ABS(difVNctr)<0.04)) ;
+
+
+
+xTiC:=(mTiicarb*(MrTi+MrC))/((mcarb+mnitr)*MrTi);
+xNbC:=(mNbicarb*(MrNb+MrC))/((mcarb+mnitr)*MrNb);
+xVC:=(mVicarb*(MrV+MrC))/((mcarb+mnitr)*MrV);
+xZrC:=(mZricarb*(MrZr+MrC))/((mcarb+mnitr)*MrZr);
+xAlN:=(mAlinitr*(MrAl+MrN))/((mcarb+mnitr)*MrAl);
+xTiN:=(mTiinitr*(MrTi+MrN))/((mcarb+mnitr)*MrTi);
+xNbN:=(mNbinitr*(MrNb+MrN))/((mcarb+mnitr)*MrNb);
+xVN:=(mVinitr*(MrV+MrN))/((mcarb+mnitr)*MrV);
+xZrN:=(mZrinitr*(MrZr+MrN))/((mcarb+mnitr)*MrZr);
+
+
+prTiC:=100*((xTiC*(MrTi+MrC))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prNbC:=100*((xNbC*(MrNb+MrC))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prVC:=100*((xVC*(MrV+MrC))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prZrC:=100*((xZrC*(MrZr+MrC))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prAlN:=100*((xAlN*(MrAl+MrN))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prTiN:=100*((xTiN*(MrTi+MrN))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prNbN:=100*((xNbN*(MrNb+MrN))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prVN:=100*((xVN*(MrV+MrN))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+prZrN:=100*((xZrN*(MrZr+MrN))/((xTiC*(MrTi+MrC))+(xNbC*(MrNb+MrC))+
+(xVC*(MrV+MrC))+(xZrC*(MrZr+MrC))+(xTiN*(MrTi+MrN))+(xAlN*(MrAl+MrN))+
+(xNbN*(MrNb+MrN))+(xVN*(MrN+MrV))+ (xZrN*(MrZr+MrN))));
+
+
+nTiC:=prTiC/(MrTi+MrC);
+nNbC:=prNbC/(MrNb+MrC);
+nVC:=prVC/(MrV+MrC);
+nZrC:=prZrC/(MrZr+MrC);
+nAlN:=prAlN/(MrAl+MrN);
+nTiN:=prTiN/(MrTi+MrN);
+nVN:=prVN/(MrV+MrN);
+nNbN:=prNbN/(MrNb+MrN);
+nZrN:=prZrN/(MrZr+MrN);
+
+nTi:=nTiC+nTiN;
+nNb:=nNbC+nNbN;
+nAl:=nAlN;
+nV:=nVC+nVN;
+nZr:=nZrC+nZrN;
+nC:=nTiC+nNbC+nVC+nZrC;
+nN:=nTiN+nAlN+nNbN+nVN+nZrN;
+
+SUMMn:= nTi + nNb + nAl + nV + nZr + nC + nN;
+
+xTi:=nTi/SUMMn;
+xNb:=nNb/SUMMn;
+xAl:=nAl/SUMMn;
+xV:=nV/SUMMn;
+xZr:=nZr/SUMMn;
+xN:=nN/SUMMn;
+xC:=nC/SUMMn;
+
+psiTi:=1 /( (xTi) + (xNb*(EXP(-eeTiNb/(0.008314*T)))) +
+(xAl*(EXP(-eeTiAl/(0.008314*T)))) + (xV*(EXP(-eeTiV/(0.008314*T)))) +
+(xZr*(EXP(-eeTiZr/(0.008314*T)))) + (xC*(EXP(-eeTiC/(0.008314*T)))) +
++ (xN*(EXP(-eeTiN/(0.008314*T)))) );
+
+psiNb:=1 /( (xNb) + (xTi*(EXP(-eeTiNb/(0.008314*T)))) +
+(xAl*(EXP(-eeNbAl/(0.008314*T)))) + (xV*(EXP(-eeNbV/(0.008314*T)))) +
+(xZr*(EXP(-eeNbZr/(0.008314*T)))) + (xC*(EXP(-eeNbC/(0.008314*T)))) +
+(xN*(EXP(-eeNbN/(0.008314*T)))) );
+
+psiAl:=1 /( (xAl) + (xTi*(EXP(-eeTiAl/(0.008314*T)))) +
+(xNb*(EXP(-eeNbAl/(0.008314*T)))) + (xV*(EXP(-eeAlV/(0.008314*T)))) +
+(xZr*(EXP(-eeAlZr/(0.008314*T)))) + (xC*(EXP(-eeAlC/(0.008314*T)))) +
+(xN*(EXP(-eeAlN/(0.008314*T)))) );
+
+psiV:=1 /( (xV) + (xTi*(EXP(-eeTiV/(0.008314*T)))) +
+(xNb*(EXP(-eeNbV/(0.008314*T)))) + (xAl*(EXP(-eeAlV/(0.008314*T)))) +
+(xZr*(EXP(-eeAlZr/(0.008314*T)))) + (xC*(EXP(-eeAlC/(0.008314*T)))) +
+(xN*(EXP(-eeAlN/(0.008314*T)))) );
+
+psiZr:=1 /( (xZr) + (xTi*(EXP(-eeTiZr/(0.008314*T)))) +
+(xNb*(EXP(-eeNbZr/(0.008314*T)))) + (xAl*(EXP(-eeAlZr/(0.008314*T)))) +
+(xV*(EXP(-eeVZr/(0.008314*T)))) + (xC*(EXP(-eeZrC/(0.008314*T)))) +
+(xN*(EXP(-eeZrN/(0.008314*T)))) );
+
+psiC:=1 /( (xC) + (xTi*(EXP(-eeTiC/(0.008314*T)))) +
+(xNb*(EXP(-eeNbC/(0.008314*T)))) + (xAl*(EXP(-eeAlC/(0.008314*T)))) +
+(xV*(EXP(-eeVC/(0.008314*T)))) + (xZr*(EXP(-eeZrC/(0.008314*T)))) +
+(xN*(EXP(-eeCN/(0.008314*T)))) );
+
+psiN:=1 /( (xN) + (xTi*(EXP(-eeTiN/(0.008314*T)))) +
+(xNb*(EXP(-eeNbN/(0.008314*T)))) + (xAl*(EXP(-eeAlN/(0.008314*T)))) +
+(xV*(EXP(-eeVN/(0.008314*T)))) + (xZr*(EXP(-eeZrN/(0.008314*T)))) +
+(xC*(EXP(-eeCN/(0.008314*T)))) );
+
+
+
+
+fTiC:=psiTi*psiC;
+fNbC:=psiNb*psiC;
+fVC:=psiV*psiC;
+fZrC:=psiZr*psiC;
+fTiN:=psiTi*psiN;
+fNbN:=psiNb*psiN;
+fAlN:=psiAl*psiN;
+fVN:=psiV*psiN;
+fZrN:=psiZr*psiN;
+
+
+{уточнение коэффициентов активности компонентов в растворе}
+
+fN2:= Power(10,( (1873/T) * ( (((mCn-mCi)*eNC) + (mMnn*eNMn) + (mSin*eNSi) +
+(mOn*eNO) + (mSn*eNS) + ((mAln-mAlinitr)*eNAl) + (mCr*eNCr) + (mNic*eNNi) +
+(mCu*eNCu) + (mMo*eNMo) + ((mTin-mTiicarb-mTiinitr)*eNTi) +
+((mNbn-mNbicarb-mNbinitr)*eNNb) + ((mVn-mVicarb-mVinitr)*eNV) +
+((mZrn-mZricarb-mZrinitr)*eNZr)) + ( (mCr*mCr*rNCr) + (mNic*mNic*rNNi) +
+(mCr*mNic*rNCrNi) ) ) ) ) ;
+
+fC2:= Power(10,((1873/T)*((((mCn-mCi)*eCC)+(mMnn*eCMn)+(mSin*eCSi)+
+((mAln-mAlinitr)*eCAl)+(mCan*eCCa)+ (mOn*eCO) + (mSn*eCS) +
+((mNn-mNi)*eCN) + (mCr*eCCr) + (mNic*eCNi) + (mCu*eCCu) +
+(mMo*eCMo) + ((mTin-mTiicarb-mTiinitr)*eCTi) +
+((mNbn-mNbicarb-mNbinitr)*eCNb) + ((mVn-mVicarb-mVinitr)*eCV) )+
+(((mCn-mCi)*(mCn-mCi)*rCC)+ (mSin*msin*rCSi)+
+((mAln-mAlinitr)*(mAln-mAlinitr)*rCAl)+
+(mCan*mCan*rCCa)+(mSn*mSn*rCS)))) );
+
+fTi2:= Power(10,((1873/T)*(( (mOn*eTiO) + (mSn*eTiS) +
+(mCr*eTiCr) + ((mNn-mNi)*eTiN) + ((mTin-mTiicarb-mTiinitr)*eTiTi) ) +
+( ((mTin-mTiicarb-mTiinitr)*(mTin-mTiicarb-mTiinitr)*rTiTi)+
+(mCr*mCr*rTiCr)+(mNic*mNic*rTiNi)+(mCr*mNic*rTiCrNi) ) ) ) );
+
+fAl2:= Power(10,((1873/T)*((((mCn-mCi)*eAlC)+(mSin*eAlSi)+((mAln-mAlinitr)*eAlAl)+
+(mCan*eAlCa)+ (mOn*eAlO) + (mSn*eAlS) + ((mNn-mNi)*eAlN) )+
+(((mCn-mCi)*(mCn-mCi)*rAlC)+ (mSin*mSin*rAlSi)+
+((mAln-mAlinitr)*(mAln-mAlinitr)*rAlAl) ) ) ) );
+
+fNb2:= Power(10,((1873/T)*(( ((mCn-mCi)*eNbC)+ (mOn*eNbO) + (mSn*eNbS) +
+((mNn-mNi)*eNbN) )+( mSn*mSn*rNbS ) ) ) );
+
+fV2:= Power(10,((1873/T)*((((mCn-mCi)*eVC)+(mSin*eVSi)+
+(mOn*eVO) + (mSn*eVS) + ((mVn-mVicarb-mVinitr)*eVV) + ((mNn-mNi)*eVN) )+
+( (mSin*mSin*rVSi) +  ((mVn-mVicarb-mVinitr)*(mVn-mVicarb-mVinitr)*rVV) +
+((mCn-mCi)*(mCn-mCi)*rVC) ) ) ) );
+
+fZr2:= Power(10,((1873/T)*(((mSin*eZrSi)+(mSn*eZrS) + ((mNn-mNi)*eZrN) ) +
+(mSn*mSn*rZrS) ) ) );
+
+
+fC:=(fC+fC2)/2;
+fTi:=(fTi+fTi2)/2;
+fNb:=(fNb+fNb2)/2;
+fAl:=(fAl+fAl2)/2;
+fV:=(fV+fV2)/2;
+fZr:=(fZr+fZr2)/2;
+
+
+
+j3:=j3+1;
+
+until j3>=3;
+
+
+j2:=j2+1;
+
+
+result.Add('');
+result[j2-1]:=('Результаты расчёта: ');
+result.Add('');
+result[j2]:='TiC: '+ floattostr(round(prTiC*1000)/1000) +' %';
+result.Add('');
+result[j2+1]:='NbC: ' + floattostr(round(prNbC*1000)/1000)+ ' %';
+result.Add('');
+result[j2+2]:='VC: ' + floattostr(round(prVC*1000)/1000) + ' %';
+result.Add('');
+result[j2+3]:='ZrC: ' + floattostr(round(prZrC*1000)/1000) + ' %';
+result.Add('');
+result[j2+4]:='TiN: ' + floattostr(round(prTiN*1000)/1000)+ ' %';
+result.Add('');
+result[j2+5]:='NbN: '+ floattostr(round(prNbN*1000)/1000)+ ' %';
+result.Add('');
+result[j2+6]:='VN: '+ floattostr(round(prVN*1000)/1000)+ ' %';
+result.Add('');
+result[j2+7]:='ZrN: '+ floattostr(round(prZrN*1000)/1000)+ ' %';
+result.Add('');
+result[j2+8]:='AlN: '+ floattostr(round(prAlN*1000)/1000)+ ' %';
+result.Add('');
+result[j2+9]:= 'Остаточное содержание C: '
++ floattostr(round(100*(mCn-mCi)/(100-mcarb-mnitr)*10000)/10000) + ' %';
+result.Add('');
+result[j2+10]:='Остаточное содержание N: '
++floattostr(round(100*(mNn-mNi)/(100-mcarb-mnitr)*10000)/10000)+ ' %';
+result.Add('');
+result[j2+11]:='Масса образовавшихся карбидов: '
++ floattostr(round(mcarb*10000*100)/100)+ ' г/т';
+result.Add('');
+result[j2+12]:= 'Масса образовавшихся нитридов: ' +
+floattostr(round(mnitr*10000*100)/100) + ' г/т';
+result.Add('');
+result[j2+13]:= 'Остаточное содержание Ti: ' +
+floattostr(round(100*(mTin-mTiicarb-mTiinitr)/(100-mcarb-mnitr)*10000)/10000) + ' %';
+result.Add('');
+result[j2+14]:= 'Остаточное содержание Nb: ' +
+floattostr(round(100*(mNbn-mNbicarb-mNbinitr)/(100-mcarb-mnitr)*10000)/10000) + ' %';
+result.Add('');
+result[j2+15]:= 'Остаточное содержание Al: ' +
+floattostr(round(100*(mAln-mAlinitr)/(100-mcarb-mnitr)*10000)/10000) + ' %';
+result.Add('');
+result[j2+16]:= 'Остаточное содержание V: ' +
+floattostr(round(100*(mVn-mVicarb-mVinitr)/(100-mcarb-mnitr)*10000)/10000) + ' %';
+result.Add('');
+result[j2+17]:= 'Остаточное содержание Zr: ' +
+floattostr(round(100*(mZrn-mZricarb-mZrinitr)/(100-mcarb-mnitr)*10000)/10000) + ' %';
+result.Add('');
+
+j2:=j2+16;
+
+control1.SaveToFile('control1.txt');
+result.SaveToFile('Результаты расчёта.txt');
+
+
+j2:=1;
+
+
+result2.Add('');
+result2[j2-1]:=('Результаты расчёта: ');
+result2.Add('');
+result2[j2]:= floattostr(round(prTiC*1000)/1000) ;
+result2.Add('');
+result2[j2+1]:= floattostr(round(prNbC*1000)/1000);
+result2.Add('');
+result2[j2+2]:= floattostr(round(prVC*1000)/1000) ;
+result2.Add('');
+result2[j2+3]:=floattostr(round(prZrC*1000)/1000) ;
+result2.Add('');
+result2[j2+4]:= floattostr(round(prTiN*1000)/1000);
+result2.Add('');
+result2[j2+5]:=floattostr(round(prNbN*1000)/1000);
+result2.Add('');
+result2[j2+6]:= floattostr(round(prVN*1000)/1000);
+result2.Add('');
+result2[j2+7]:=floattostr(round(prZrN*1000)/1000);
+result2.Add('');
+result2[j2+8]:=floattostr(round(prAlN*1000)/1000);
+result2.Add('');
+result2[j2+9]:= floattostr(round(100*(mCn-mCi)/(100-mcarb-mnitr)*10000)/10000) ;
+result2.Add('');
+result2[j2+10]:=floattostr(round(100*(mNn-mNi)/(100-mcarb-mnitr)*10000)/10000);
+result2.Add('');
+result2[j2+11]:=floattostr(round(mcarb*10000*100)/100);
+result2.Add('');
+result2[j2+12]:= floattostr(round(mnitr*10000*100)/100) ;
+result2.Add('');
+result2[j2+13]:= floattostr(round(100*(mTin-mTiicarb-mTiinitr)/(100-mcarb-mnitr)*10000)/10000) ;
+result2.Add('');
+result2[j2+14]:= floattostr(round(100*(mNbn-mNbicarb-mNbinitr)/(100-mcarb-mnitr)*10000)/10000) ;
+result2.Add('');
+result2[j2+15]:= floattostr(round(100*(mAln-mAlinitr)/(100-mcarb-mnitr)*10000)/10000);
+result2.Add('');
+result2[j2+16]:=floattostr(round(100*(mVn-mVicarb-mVinitr)/(100-mcarb-mnitr)*10000)/10000);
+result2.Add('');
+result2[j2+17]:= floattostr(round(100*(mZrn-mZricarb-mZrinitr)/(100-mcarb-mnitr)*10000)/10000);
+result2.Add('');
+
+result2[j2+18]:= ' ';
+result2.Add('');
+
+result2[j2+19]:= floattostr(mTiicarb) ;
+result2.Add('');
+result2[j2+20]:= floattostr(mNbicarb) ;
+result2.Add('');
+result2[j2+21]:= ' ';
+result2.Add('');
+result2[j2+22]:=floattostr(mVicarb);
+result2.Add('');
+result2[j2+23]:= floattostr(mZricarb);
+result2.Add('');
+
+result2[j2+24]:= ' ';
+result2.Add('');
+
+result2[j2+25]:= floattostr(mTiinitr) ;
+result2.Add('');
+result2[j2+26]:= floattostr(mNbinitr) ;
+result2.Add('');
+result2[j2+27]:= floattostr(mAlinitr);
+result2.Add('');
+result2[j2+28]:=floattostr(mVinitr);
+result2.Add('');
+result2[j2+29]:= floattostr(mZrinitr);
+result2.Add('');
+
+j2:=j2+28;
+
+
+result2.SaveToFile('Результаты расчёта2.txt');
+
+
+
+
+
+showmessage('Расчёт окончен');
+
+sl1:
+
+control1.Free;
+result.Free;
+result2.Free;
+
+end;
+
+procedure TForm1.Edit1Change(Sender: TObject);
+begin
+if (edit1.Text)='' then
+edit1.Text:='0';
+if strtofloat(edit1.Text)<0 then
+edit1.Text:=floattostr(strtofloat(edit1.Text)*(-1));
+
+
+end;
+
+procedure TForm1.Edit2Change(Sender: TObject);
+begin
+if (edit2.Text)='' then
+edit2.Text:='0';
+if strtofloat(edit2.Text)<0 then
+edit2.Text:=floattostr(strtofloat(edit2.Text)*(-1));
+end;
+
+end.
+
+

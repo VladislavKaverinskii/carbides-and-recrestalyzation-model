@@ -210,7 +210,7 @@ my_Postprocessor.make_plot("current_concentrations")
 my_Postprocessor.make_plot("disl_dens")
 my_Postprocessor.make_plot("d_current")
 
-#my_Postprocessor.save_to_xls()
+my_Postprocessor.save_to_xls()
 
 print()
 
@@ -235,7 +235,7 @@ my_Postprocessor.make_plot('elements_consumption')
 my_Postprocessor.make_plot('percents_of_compounds')
 my_Postprocessor.make_plot('elements_in_solution')
 
-my_Postprocessor.save_to_xls()
+# my_Postprocessor.save_to_xls()
 
 
 

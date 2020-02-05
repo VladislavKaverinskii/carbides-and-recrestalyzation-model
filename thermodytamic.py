@@ -511,10 +511,18 @@ class CarbonitrideThermodynamicsInSteel():
 
             x_carb = 0.0
             diff = None
+            min_eps = 0.1
+            counter = 1.0
             while diff is None or diff**2 > self.convergention_ctiterial**2:
-                x_carb_new = math.exp(2.3 * (carb_fctor - (q_carb/q_nitr) * nitr_fctor)) * pow((1.0 - x_carb), (q_carb/q_nitr))
+                x_carb_new = math.exp(2.3 * (carb_fctor - (q_carb/q_nitr) * nitr_fctor)) * pow((abs(1.0 - x_carb)), (q_carb/q_nitr))
                 diff = 2* (x_carb - x_carb_new) / (x_carb_new + x_carb + epsilon)
                 x_carb = x_carb_new
+
+                if x_carb > 1.0:
+                    x_carb = 0.9999
+                    break
+
+                # print(diff, x_carb)
 
             x_nitr = 1.0 - x_carb
 
@@ -639,6 +647,7 @@ class CarbonitrideThermodynamicsInSteel():
                 el_2 = i.split("_")[1]
                 if el_1 in psi_values and el_2 in psi_values:
                     initial_activity_for_compounds[i] = psi_values[el_1] * psi_values[el_2]
+                    # print(i, initial_activity_for_compounds[i], el_1, el_2, psi_values[el_1], psi_values[el_2])
 
             global_iteration_criteria_new = []
 
