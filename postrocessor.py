@@ -132,7 +132,7 @@ class Postprocessor:
            plt.legend()
            plt.show()
 
-   def save_to_xls(self, fail_name="out.xls", every=1):
+   def save_to_xls(self, fail_name="out.xls", every=2):
        existing_sheets = []
        if self.prepeared_data is None:
            self.prepear_data()
@@ -162,7 +162,9 @@ class Postprocessor:
                        counter += 1
                    new_sheet = book.add_sheet(new_sheet_name)
                    existing_sheets.append(new_sheet_name)
+
            new_sheet.write(0, 0, self.terms_description[parameter_key]["x"])
+
            if "y" in self.prepeared_data[parameter_key]:
                counter = 1
                for sub_parameter in self.prepeared_data[parameter_key]["y"]:

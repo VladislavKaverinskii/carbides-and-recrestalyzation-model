@@ -4,7 +4,7 @@ import math
 import copy
 import operator
 import rec_press
-
+import functools
 
 R = 8.3144598
 epsilon = 0.000001
@@ -41,6 +41,7 @@ class CarbonitrideThermodynamicsInSteel():
         else:
             self.convergention_ctiterial = 1e-11
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def calc_solute_energy(self, element="C", t=1000.0):
         if "solute_energies" in self.td_params:
             if element in self.td_params["solute_energies"]:
@@ -49,6 +50,7 @@ class CarbonitrideThermodynamicsInSteel():
                 return intercept + coef * t
         return 0
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def calc_formation_energy(self, compound="Ti_C", t=1000.0):
         energy = 0
         if "formation_energies" in self.td_params:
@@ -57,6 +59,7 @@ class CarbonitrideThermodynamicsInSteel():
                     energy += self.td_params["formation_energies"][compound][key] * (pow(t, float(key)))
         return energy
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def calc_smelting_energy(self, element="Ti", t=1000.0):
         if "melting_temperatures" in self.td_params and "h_melting" in self.td_params:
             if element in self.td_params["melting_temperatures"] and element in self.td_params["h_melting"]:
@@ -64,13 +67,11 @@ class CarbonitrideThermodynamicsInSteel():
                        - t*self.td_params["h_melting"][element]/self.td_params["melting_temperatures"][element])
         return 0.0
 
-
+    @functools.lru_cache(maxsize=128, typed=False)
     def calc_full_energy(self, compound="Ti_C", t=1000.0):
         solute_energy = math.fsum([self.calc_solute_energy(i, t) for i in compound.split("_")])
         formation_energy = self.calc_formation_energy(compound=compound, t=t)
         return formation_energy - solute_energy #- smelting_energy
-
-
 
     def c_n_check(self):
         if self.chem_composition["C"] == 0 and self.chem_composition["N"] == 0:
@@ -83,6 +84,7 @@ class CarbonitrideThermodynamicsInSteel():
             return False
         return True
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def eq_constant(self, composition=""):
         if composition in self.td_params["eq_constant_params"]:
             q = self.td_params["eq_constant_params"][composition]["Q"]
@@ -91,6 +93,7 @@ class CarbonitrideThermodynamicsInSteel():
             return pow(10.0, ((q / self.t) + a * (self.t) - s))
         return 0.0
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def calculate_intaraction_parameter(self, el_i="", el_j="", el_k=None, order=1):
         order_marker = "e"
         if order == 1:

@@ -3,6 +3,8 @@
 import matplotlib.pyplot as plt
 import math
 import flow_stress
+import decimal
+import functools
 
 R = 8.3144598
 
@@ -132,7 +134,7 @@ class Dislocations:
 
         self.fs = flow_stress.FlowStress(parameters=parameters, chem_composition=composition)
 
-
+    @functools.lru_cache(maxsize=128, typed=False)
     def austenite_disl_dens(self, d_s=0, T=1.0, C=0.0):
         #s = self.fs.calcFlowStress(D_0=D_0, e=e, v=v, T=T)
         #s_y = self.fs.calcFlowStress(D_0=D_0, e=0.2, v=v, T=T)
@@ -142,9 +144,11 @@ class Dislocations:
 
         return pow(d_s /(ALPHA_DISL*TAILOR*mu*b[0]), 2.0)
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def mu(self, t):
         return 8.1E10 * (0.91 - ((t - 300)/1810))
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def burgers(self, params=(0.356E-9, 0.356E-9, ), alpha=math.pi/2.0, lattice_type="FCC"):
         try:
             if lattice_type == "FCC":
@@ -165,14 +169,16 @@ class Dislocations:
         except:
             return None
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def austenite_a(self, T=1273.15, C=0.0):
         return (0.356 + 0.0000085*T + 0.0033*C)*pow(10, -9)
 
-    def austenite_disl_dens_t(self, x_t=0.0, D_0=20, e=0.8, v=0.0011, T=1000.0, C=0.0, tau=0.0):
+    @functools.lru_cache(maxsize=128, typed=False)
+    def austenite_disl_dens_t(self, x_t=0.0, D_0=20, e=0.8, v=0.0011, T=1000.0, C=0.0, tau=0.0, n_total=0, n_init=1):
         s = self.fs.calcFlowStress(D_0=D_0, e=e, v=v, T=T)
         s_y = self.fs.calcFlowStress(D_0=D_0, e=0.002, v=v, T=T)
 
-        new_ds = self.disl_dens_decr_austenite(s_0=s, d_s=(s - s_y), T=T, C=C, tau=tau)
+        new_ds = self.disl_dens_decr_austenite(s_0=s, d_s=(s - s_y), T=T, C=C, tau=tau, n_total=n_total, n_init=n_init)
 
         #print("ds= ", new_ds)
 
@@ -182,17 +188,22 @@ class Dislocations:
 
         return A_D1 * ro_avg * (1 + (1.0/A_D1)*math.exp(-A_D2 * x_t))
 
-    def austenite_p_rex(self, x_t=0.0, D_0=20, e=0.8, v=0.0011, T=1000.0, C=0.0, tau=0.0):
-        dens = self.austenite_disl_dens_t(x_t=x_t, D_0=D_0, e=e, v=v, T=T, C=C, tau=tau)
+    @functools.lru_cache(maxsize=128, typed=False)
+    def austenite_p_rex(self, x_t=0.0, D_0=20, e=0.8, v=0.0011, T=1000.0, C=0.0, tau=0.0, n_total=0, n_init=1):
+        dens = self.austenite_disl_dens_t(x_t=x_t, D_0=D_0, e=e, v=v, T=T, C=C, tau=tau, n_total=n_total, n_init=n_init)
         #print("ro_disl ", dens)
         mu = self.mu(T - 273.15)
         a = (self.austenite_a(T=T, C=C),)
         b = self.burgers(params=a)
         return 0.5*mu*b[0]*b[0]*dens
 
-    def n_rex(self, x_t=0.0, D_0=20, e=0.8, v=0.0011, T=1000.0, C=0.0, tau=0.0):
-        p_rex = self.austenite_p_rex(x_t=x_t, D_0=D_0, e=e, v=v, T=T, C=C, tau=tau)
-        return (A_REX * p_rex * p_rex)/D_0
+    @functools.lru_cache(maxsize=128, typed=False)
+    def n_rex(self, x_t=0.0, D_0=20, e=0.8, v=0.0011, T=1000.0, C=0.0, tau=0.0, n_total=0, n_init=1):
+        p_rex = self.austenite_p_rex(x_t=x_t, D_0=D_0, e=e, v=v, T=T, C=C, tau=tau, n_total=n_total, n_init=n_init)
+        if D_0 != 0:
+            return (A_REX * p_rex * p_rex)/D_0
+        else:
+            return 0
 
     def m_rex_gb(self, T):
         q_sd = QSD(self.parameters, self.composition).qsd
@@ -200,9 +211,12 @@ class Dislocations:
         s_rex_gg = B_REX_GG * q_rex_gg #*2.05
         #print("q_rex_gg ", math.exp((s_rex_gg/R))*math.exp(-q_rex_gg/(R*T)))
         #print("s_rex_gg ", math.exp(-q_rex_gg/(R*T)))
+        #print("q_rex_gg", q_rex_gg)
+        #print("s_rex_gg", s_rex_gg)
         return M_REX_0*math.exp((s_rex_gg/R))*math.exp(-q_rex_gg/(R*T))
 
-    def disl_dens_decr_austenite(self, s_0=1.0, d_s=0.0, T=1000.0, C=0.1, tau=0.0):
+    @functools.lru_cache(maxsize=128, typed=False)
+    def disl_dens_decr_austenite(self, s_0=1.0, d_s=0.0, T=1000.0, C=0.1, tau=0.0, n_total=0, n_init=1):
         mu = self.mu(T-273.15)
         v_d = self.parameters["return_parametrs"]["v_D"]
         u_rec = self.parameters["return_parametrs"]["U_rec"]
@@ -220,8 +234,16 @@ class Dislocations:
         sin_s = math.sinh((d_s * v_rec)/(R*T))
         #print("R*T= ", R*T)
 
-        return s_0 - (factor_s * exp_s * sin_s * tau)
+        #print("qqqq", n_total, n_init, (1 - n_total / n_init))
+        #print("init_dens", s_0 - (factor_s * exp_s * sin_s * tau))
+        #print("correction", (1 - n_total / n_init))
 
+        if n_init != 0 and n_total / n_init != 1:
+            return s_0 - (factor_s * exp_s * sin_s * tau) / (1 - n_total / n_init)
+        else:
+            return s_0 - (factor_s * exp_s * sin_s * tau)
+
+    @functools.lru_cache(maxsize=128, typed=False)
     def v_rec(self, T=1000.0, b=3.0E-9):
         a = self.parameters["return_parametrs"]["V_rec_factor"]
         e = self.parameters["return_parametrs"]["V_rec_exp"]
@@ -259,7 +281,7 @@ class RecrystalizationSolver:
         #n_rex = self.dislocations_handler.n_rex(x_t=x_t, D_0=self.D_0, e=self.e, v=self.v, T=self.T, C=c)
         n_rex = None
         #print(tau, x_t)
-        print(x_t)
+        #print(x_t)
         dens = self.dislocations_handler.austenite_disl_dens_t(x_t=x_t, D_0=self.D_0, e=self.e, v=self.v,
                                                                T=self.T, C=c, tau=tau)
 
@@ -378,10 +400,17 @@ class RecrystalizationSolver:
                     inner_m_p_tmp = inner_m_p
                     inner_m_p_tmp += m_rex_gb * p_rex * d_tau
                     x_ext_t = n_rex * pow(inner_m_p_tmp, 3)
-
-                    dx_t = abs(x_t - x_t_prev)/x_t
+                    if x_t > 0:
+                        dx_t = abs(x_t - x_t_prev)/x_t
+                    elif x_t_prev > 0:
+                        dx_t = abs(x_t - x_t_prev) / x_t_prev
+                    else:
+                        dx_t = 0.0
                     x_t_prev = x_t
-                    x_t = 1 - math.exp(-x_ext_t)
+                    if x_ext_t > 0:
+                        x_t = 1 - math.exp(-x_ext_t)
+                    else:
+                        x_t = 0
 
                 inner_m_p += m_rex_gb * p_rex * d_tau
 
@@ -398,27 +427,40 @@ class RecrystalizationSolver:
 
         return {"x_t": x_t_out, "grain_d": d_out, "disl_dens": dens_out}
 
-    def x_t_calc(self, x_t, d_current, inner_m_p, c, tau, d_tau, p_z=0.0):
+    @functools.lru_cache(maxsize=128, typed=False)
+    def x_t_calc(self, x_t, d_current, inner_m_p, c, tau, d_tau, p_z=0.0, n_total=0, n_init=1):
 
         dx_t = 100.0
         p_rex = self.dislocations_handler.austenite_p_rex(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T, C=c,
-                                                          tau=tau) - p_z
-        # print(p_rex, p_z)
-        n_rex = self.dislocations_handler.n_rex(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T, C=c, tau=tau)
+                                                          tau=tau, n_total=n_total, n_init=n_init) - p_z
+        #print("p_rex", self.dislocations_handler.austenite_p_rex(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T, C=c,
+        #                                                  tau=tau, n_total=n_total, n_init=n_init))
+        #print("p_rex p_z", p_rex, p_z)
+        n_rex = self.dislocations_handler.n_rex(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T, C=c, tau=tau,
+                                                n_total=n_total, n_init=n_init)
+        #print("n_rex", n_rex)
         d_current = n_rex ** (1.0 / 3.0)
 
         m_rex_gb = self.dislocations_handler.m_rex_gb(self.T)
         inner_m_p_tmp = inner_m_p
         inner_m_p_tmp += m_rex_gb * p_rex * d_tau
+        #print("m_rex_gb", m_rex_gb)
+        #print("m_rex_gb * p_rex", m_rex_gb * p_rex)
         x_ext_t = n_rex * pow(inner_m_p_tmp, 3)
-        x_t = 1 - math.exp(-x_ext_t)
+
+        decimal.getcontext().prec = 50
+        if x_ext_t > 0:
+            x_t = 1 - decimal.Decimal(math.exp(-decimal.Decimal(x_ext_t)))
+        else:
+            x_t = 0.0
         x_t_prev = x_t
 
         while dx_t > 0.00001:
-            x_t = (x_t + x_t_prev) / 2.0
+            x_t = (float(x_t) + float(x_t_prev)) / 2.0
             p_rex = self.dislocations_handler.austenite_p_rex(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T,
-                                                              C=c, tau=tau)
-            n_rex = self.dislocations_handler.n_rex(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T, C=c, tau=tau)
+                                                              C=c, tau=tau, n_total=n_total, n_init=n_init) - p_z
+            n_rex = self.dislocations_handler.n_rex(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T, C=c, tau=tau,
+                                                    n_total=n_total, n_init=n_init)
 
             d_current = n_rex ** (1.0 / 3.0)
 
@@ -427,15 +469,20 @@ class RecrystalizationSolver:
             x_ext_t = n_rex * pow(inner_m_p_tmp, 3)
 
             if x_t > 0:
-                dx_t = abs(x_t - x_t_prev) / x_t
+                dx_t = abs(float(x_t) - float(x_t_prev)) / float(x_t)
             else:
                 dx_t = 0.0
             x_t_prev = x_t
-            x_t = 1 - math.exp(-x_ext_t)
+            if x_ext_t > 0:
+                x_t = 1 - math.exp(-x_ext_t)
+            else:
+                x_t = 0.0
+
+            #print('x_ext_t', x_ext_t, x_t)
 
         inner_m_p += m_rex_gb * p_rex * d_tau
         dens = self.dislocations_handler.austenite_disl_dens_t(x_t=x_t, D_0=d_current, e=self.e, v=self.v, T=self.T,
-                                                               C=c, tau=tau)
+                                                               C=c, tau=tau, n_total=n_total, n_init=n_init)
         return x_t, inner_m_p, dens, d_current
 
 '''
